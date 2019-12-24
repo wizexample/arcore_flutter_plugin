@@ -114,6 +114,10 @@ class ArCoreController {
     });
   }
 
+  void startWorldTrackingSessionWithImage() {
+    _channel.invokeMethod<void>('addImageRunWithConfigAndImage');
+  }
+
   Map<String, dynamic> _addParentNodeNameToParams(
       Map geometryMap, String parentNodeName) {
     if (parentNodeName?.isNotEmpty ?? false)

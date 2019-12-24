@@ -30,7 +30,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 
-class ArCoreView(context: Context, messenger: BinaryMessenger, id: Int, private val isAugmentedFaces: Boolean) : PlatformView, MethodChannel.MethodCallHandler {
+class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: Int, private val isAugmentedFaces: Boolean) : PlatformView, MethodChannel.MethodCallHandler {
     private val methodChannel: MethodChannel = MethodChannel(messenger, "arcore_flutter_plugin_$id")
     private val activity: Activity = (context.applicationContext as FlutterApplication).currentActivity
     lateinit var activityLifecycleCallbacks: Application.ActivityLifecycleCallbacks
@@ -141,7 +141,7 @@ class ArCoreView(context: Context, messenger: BinaryMessenger, id: Int, private 
 
         // Lastly request CAMERA permission which is required by ARCore.
         ArCoreUtils.requestCameraPermission(activity, RC_PERMISSIONS)
-        setupLifeCycle(context)
+//        setupLifeCycle(context)
     }
 
     fun loadMesh(textureBytes: ByteArray?) {
@@ -219,6 +219,9 @@ class ArCoreView(context: Context, messenger: BinaryMessenger, id: Int, private 
                     println("□■□■ addImageRunWithConfigAndImage $imageName")
                     augmentedImageParams.add(ARReferenceImage(imageName, bitmap, markerSizeMeter))
                 }
+            }
+            "startWorldTrackingSessionWithImage" -> {
+                setupLifeCycle(context)
             }
             else -> {
             }
