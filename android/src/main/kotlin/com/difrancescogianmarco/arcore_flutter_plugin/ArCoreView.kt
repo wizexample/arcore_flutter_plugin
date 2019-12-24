@@ -222,8 +222,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             }
             "startWorldTrackingSessionWithImage" -> {
                 println("startWorldTrackingSessionWithImage")
-//                setupLifeCycle(context)
                 onPause()
+                onDestroy()
                 onResume()
             }
             else -> {
