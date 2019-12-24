@@ -50,6 +50,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
     private val augmentedImageParams = ArrayList<ARReferenceImage>()
     private var augmentedImageDatabase: AugmentedImageDatabase? = null
+    private var isReady = false
 
     init {
         methodChannel.setMethodCallHandler(this)
@@ -222,9 +223,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             }
             "startWorldTrackingSessionWithImage" -> {
                 println("startWorldTrackingSessionWithImage")
-                onPause()
-                onDestroy()
-                arSceneView = ArSceneView(context)
+                isReady = true
                 onResume()
             }
             else -> {
@@ -464,7 +463,9 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             ArCoreUtils.requestCameraPermission(activity, RC_PERMISSIONS)
         }
 
-        if (arSceneView?.session == null) {
+        println("onResume ${arSceneView?.session == null} | $isReady")
+
+        if (arSceneView?.session == null && isReady) {
             Log.i(TAG, "session is null")
             try {
                 val session = ArCoreUtils.createArSession(activity, mUserRequestedInstall, isAugmentedFaces)
