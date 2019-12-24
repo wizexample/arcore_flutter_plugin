@@ -224,6 +224,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 println("startWorldTrackingSessionWithImage")
                 onPause()
                 onDestroy()
+                arSceneView = ArSceneView(context)
                 onResume()
             }
             else -> {
