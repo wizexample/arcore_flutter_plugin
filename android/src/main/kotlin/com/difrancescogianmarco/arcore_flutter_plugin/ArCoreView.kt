@@ -141,7 +141,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
         // Lastly request CAMERA permission which is required by ARCore.
         ArCoreUtils.requestCameraPermission(activity, RC_PERMISSIONS)
-//        setupLifeCycle(context)
+        setupLifeCycle(context)
     }
 
     fun loadMesh(textureBytes: ByteArray?) {
@@ -222,7 +222,9 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             }
             "startWorldTrackingSessionWithImage" -> {
                 println("startWorldTrackingSessionWithImage")
-                setupLifeCycle(context)
+//                setupLifeCycle(context)
+                onPause()
+                onResume()
             }
             else -> {
             }
