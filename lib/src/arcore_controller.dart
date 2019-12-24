@@ -115,7 +115,7 @@ class ArCoreController {
   }
 
   void startWorldTrackingSessionWithImage() {
-    _channel.invokeMethod<void>('addImageRunWithConfigAndImage');
+    _channel.invokeMethod<void>('startWorldTrackingSessionWithImage');
   }
 
   Map<String, dynamic> _addParentNodeNameToParams(
