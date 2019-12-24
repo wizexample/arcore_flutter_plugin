@@ -5,7 +5,6 @@ import android.app.Application
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -43,13 +42,14 @@ class ArCoreView(context: Context, messenger: BinaryMessenger, id: Int, private 
     private val RC_PERMISSIONS = 0x123
     private var sceneUpdateListener: Scene.OnUpdateListener
     private var faceSceneUpdateListener: Scene.OnUpdateListener
-    
+
     //AUGMENTEDFACE
     private var faceRegionsRenderable: ModelRenderable? = null
     private var faceMeshTexture: Texture? = null
     private val faceNodeMap = HashMap<AugmentedFace, AugmentedFaceNode>()
 
     private val augmentedImageParams = ArrayList<ARReferenceImage>()
+    private var augmentedImageDatabase: AugmentedImageDatabase? = null
 
     init {
         methodChannel.setMethodCallHandler(this)
@@ -517,16 +517,17 @@ class ArCoreView(context: Context, messenger: BinaryMessenger, id: Int, private 
     }
 
     private fun setupAugmentedImageDatabase(config: Config, session: Session) {
-        val augmentedImageDatabase = AugmentedImageDatabase(session)
+        val database = augmentedImageDatabase ?: AugmentedImageDatabase(session)
         println("□■□■ setupAugmentedImageDatabase")
 
         augmentedImageParams.forEach { reference ->
-            augmentedImageDatabase.addImage(reference.imageName, reference.image, reference.physicalSize)
-//            reference.image.recycle()
+            database.addImage(reference.imageName, reference.image, reference.physicalSize)
+            reference.image.recycle()
         }
 
-        config.augmentedImageDatabase = augmentedImageDatabase
-//        augmentedImageParams.clear()
+        config.augmentedImageDatabase = database
+        augmentedImageParams.clear()
+        augmentedImageDatabase = database
     }
 
     /* private fun tryPlaceNode(tap: MotionEvent?, frame: Frame) {
