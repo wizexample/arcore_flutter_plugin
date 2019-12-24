@@ -1,9 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:arcore_flutter_plugin/src/arcore_rotating_node.dart';
 import 'package:arcore_flutter_plugin/src/utils/vector_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:meta/meta.dart';
-import 'arcore_hit_test_result.dart';
 
+import 'arcore_hit_test_result.dart';
 import 'arcore_node.dart';
 import 'arcore_plane.dart';
 
@@ -16,8 +18,7 @@ class ArCoreController {
   ArCoreController({
     int id,
     this.enableTapRecognizer,
-    this.enableUpdateListener,
-//    @required this.onUnsupported,
+    this.enableUpdateListener, //    @required this.onUnsupported,
   }) {
     _channel = MethodChannel('arcore_flutter_plugin_$id');
     _channel.setMethodCallHandler(_handleMethodCalls);
@@ -101,6 +102,16 @@ class ArCoreController {
   Future<void> removeNode({@required String nodeName}) {
     assert(nodeName != null);
     return _channel.invokeMethod('removeARCoreNode', {'nodeName': nodeName});
+  }
+
+  void addImageRunWithConfigAndImage(Uint8List bytes, int lengthInBytes,
+      String imageName, double markerSizeMeter) {
+    _channel.invokeMethod<void>('addImageRunWithConfigAndImage', {
+      'imageBytes': bytes,
+      'imageLength': lengthInBytes,
+      'imageName': imageName,
+      'markerSizeMeter': markerSizeMeter,
+    });
   }
 
   Map<String, dynamic> _addParentNodeNameToParams(
