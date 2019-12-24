@@ -216,6 +216,7 @@ class ArCoreView(context: Context, messenger: BinaryMessenger, id: Int, private 
                     val bytes = (map["imageBytes"] as? ByteArray) ?: return
                     val bytesLength = (map["imageLength"] as? Int) ?: return
                     val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytesLength)
+                    println("□■□■ addImageRunWithConfigAndImage $imageName")
                     augmentedImageParams.add(ARReferenceImage(imageName, bitmap, markerSizeMeter))
                 }
             }
@@ -517,6 +518,7 @@ class ArCoreView(context: Context, messenger: BinaryMessenger, id: Int, private 
 
     private fun setupAugmentedImageDatabase(config: Config, session: Session) {
         val augmentedImageDatabase = AugmentedImageDatabase(session)
+        println("□■□■ setupAugmentedImageDatabase")
 
         augmentedImageParams.forEach { reference ->
             augmentedImageDatabase.addImage(reference.imageName, reference.image, reference.physicalSize)
