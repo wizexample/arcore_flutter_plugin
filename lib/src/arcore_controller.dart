@@ -115,6 +115,7 @@ class ArCoreController {
   }
 
   void startWorldTrackingSessionWithImage() {
+    print('startWorldTrackingSessionWithImage');
     _channel.invokeMethod<void>('startWorldTrackingSessionWithImage');
   }
 
