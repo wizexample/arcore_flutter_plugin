@@ -313,7 +313,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     private fun arScenViewInit(call: MethodCall, result: MethodChannel.Result, context: Context) {
-        Log.i(TAG, "arScenViewInit")
+        Log.i(TAG, "arSceneViewInit")
         val enableTapRecognizer: Boolean? = call.argument("enableTapRecognizer")
         if (enableTapRecognizer != null && enableTapRecognizer) {
             arSceneView

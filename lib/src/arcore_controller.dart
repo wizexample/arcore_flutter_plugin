@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:arcore_flutter_plugin/src/arcore_marker.dart';
 import 'package:arcore_flutter_plugin/src/arcore_rotating_node.dart';
 import 'package:arcore_flutter_plugin/src/utils/vector_utils.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +14,7 @@ typedef StringResultHandler = void Function(String text);
 typedef UnsupportedHandler = void Function(String text);
 typedef ArCoreHitResultHandler = void Function(List<ArCoreHitTestResult> hits);
 typedef ArCorePlaneHandler = void Function(ArCorePlane plane);
+typedef ArCoreImageHandler = void Function(ArCoreMarker marker);
 
 class ArCoreController {
   ArCoreController({
@@ -34,6 +36,7 @@ class ArCoreController {
 //  UnsupportedHandler onUnsupported;
   ArCoreHitResultHandler onPlaneTap;
   ArCorePlaneHandler onPlaneDetected;
+  ArCoreImageHandler onImageDetected;
 
   init() async {
     try {
@@ -74,6 +77,12 @@ class ArCoreController {
         if (enableUpdateListener && onPlaneDetected != null) {
           final plane = ArCorePlane.fromMap(call.arguments);
           onPlaneDetected(plane);
+        }
+        break;
+      case 'onImageDetected':
+        if (enableUpdateListener && onPlaneDetected != null) {
+          final marker = ArCoreMarker.fromMap(call.arguments);
+          onImageDetected(marker);
         }
         break;
       default:
