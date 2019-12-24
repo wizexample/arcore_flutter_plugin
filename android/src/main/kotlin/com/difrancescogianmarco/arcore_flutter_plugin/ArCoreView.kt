@@ -14,6 +14,7 @@ import android.widget.Toast
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreHitTestResult
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCorePose
+import com.difrancescogianmarco.arcore_flutter_plugin.models.ARReferenceImage
 import com.difrancescogianmarco.arcore_flutter_plugin.models.RotatingNode
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.ArCoreUtils
 import com.google.ar.core.*
@@ -47,6 +48,8 @@ class ArCoreView(context: Context, messenger: BinaryMessenger, id: Int, private 
     private var faceRegionsRenderable: ModelRenderable? = null
     private var faceMeshTexture: Texture? = null
     private val faceNodeMap = HashMap<AugmentedFace, AugmentedFaceNode>()
+
+    private val augmentedImageParams = ArrayList<ARReferenceImage>()
 
     init {
         methodChannel.setMethodCallHandler(this)
@@ -84,6 +87,18 @@ class ArCoreView(context: Context, messenger: BinaryMessenger, id: Int, private 
                     map["extentZ"] = plane.extentZ
 
                     methodChannel.invokeMethod("onPlaneDetected", map)
+                }
+            }
+            for (augmentedImage in frame.getUpdatedTrackables(AugmentedImage::class.java)) {
+                if (augmentedImage.trackingState == TrackingState.TRACKING) {
+
+                    val pose = augmentedImage.centerPose
+                    val map: HashMap<String, Any> = HashMap<String, Any>()
+                    map["centerPose"] = FlutterArCorePose(pose.translation, pose.rotationQuaternion).toHashMap()
+                    map["extentX"] = augmentedImage.extentX
+                    map["extentZ"] = augmentedImage.extentZ
+
+                    methodChannel.invokeMethod("onImageDetected", map)
                 }
             }
         }
@@ -193,6 +208,16 @@ class ArCoreView(context: Context, messenger: BinaryMessenger, id: Int, private 
             "dispose" -> {
                 Log.i(TAG, " updateMaterials")
                 dispose()
+            }
+            "addImageRunWithConfigAndImage" -> {
+                (call.arguments as? Map<*, *>)?.let { map ->
+                    val imageName = map["imageName"] as? String ?: return
+                    val markerSizeMeter = (map["markerSizeMeter"] as? Number ?: 1).toFloat()
+                    val bytes = (map["imageBytes"] as? ByteArray) ?: return
+                    val bytesLength = (map["imageLength"] as? Int) ?: return
+                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytesLength)
+                    augmentedImageParams.add(ARReferenceImage(imageName, bitmap, markerSizeMeter))
+                }
             }
             else -> {
             }
@@ -445,6 +470,7 @@ class ArCoreView(context: Context, messenger: BinaryMessenger, id: Int, private 
                     if (isAugmentedFaces) {
                         config.augmentedFaceMode = Config.AugmentedFaceMode.MESH3D
                     }
+                    setupAugmentedImageDatabase(config, session)
                     config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
                     config.focusMode = Config.FocusMode.AUTO;
                     session.configure(config)
@@ -487,6 +513,18 @@ class ArCoreView(context: Context, messenger: BinaryMessenger, id: Int, private 
             arSceneView?.destroy()
             arSceneView = null
         }
+    }
+
+    private fun setupAugmentedImageDatabase(config: Config, session: Session) {
+        val augmentedImageDatabase = AugmentedImageDatabase(session)
+
+        augmentedImageParams.forEach { reference ->
+            augmentedImageDatabase.addImage(reference.imageName, reference.image, reference.physicalSize)
+//            reference.image.recycle()
+        }
+
+        config.augmentedImageDatabase = augmentedImageDatabase
+//        augmentedImageParams.clear()
     }
 
     /* private fun tryPlaceNode(tap: MotionEvent?, frame: Frame) {

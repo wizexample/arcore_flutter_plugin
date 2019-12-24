@@ -38,9 +38,9 @@ flutter:
     - assets/ArcticFox.gif
     - assets/TocoToucan.gif
     - assets/fox_face_mesh_texture.png
-    - assets/prova_texture.png
-    - assets/venom.jpg
-    - assets/venom_with_eyes.jpg
+#    - assets/prova_texture.png
+#    - assets/venom.jpg
+#    - assets/venom_with_eyes.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
