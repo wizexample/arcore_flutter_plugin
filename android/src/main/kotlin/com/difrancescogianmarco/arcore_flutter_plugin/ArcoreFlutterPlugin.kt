@@ -1,10 +1,8 @@
 package com.difrancescogianmarco.arcore_flutter_plugin
 
-import android.util.Log
-import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.PluginRegistry
 
-class ArcoreFlutterPlugin{
+class ArcoreFlutterPlugin {
 
     companion object {
 

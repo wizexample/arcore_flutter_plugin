@@ -132,7 +132,7 @@ class ArCoreFaceView(context: Context, messenger: BinaryMessenger, id: Int) : Ba
             // If the session wasn't created yet, don't resume rendering.
             // This can happen if ARCore needs to be updated or permissions are not granted yet.
             try {
-                val session = ArCoreUtils.createArSession(activity, installRequested, true)
+                val session = ArCoreUtils.createArSession(activity, installRequested, ARType.AUGMENTED_FACES)
                 if (session == null) {
                     installRequested = ArCoreUtils.hasCameraPermission(activity)
                     return

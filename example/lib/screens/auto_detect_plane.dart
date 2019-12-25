@@ -31,14 +31,14 @@ class _AutoDetectPlaneState extends State<AutoDetectPlane> {
     arCoreController.onPlaneDetected = _handleOnPlaneDetected;
   }
 
-  void _handleOnPlaneDetected(ArCorePlane plane) {
+  void _handleOnPlaneDetected(ARCorePlane plane) {
     if (node != null) {
       arCoreController.removeNode(nodeName: node.name);
     }
     _addSphere(arCoreController, plane);
   }
 
-  Future _addSphere(ArCoreController controller, ArCorePlane plane) async {
+  Future _addSphere(ArCoreController controller, ARCorePlane plane) async {
     final ByteData textureBytes = await rootBundle.load('assets/earth.jpg');
 
     final material = ArCoreMaterial(

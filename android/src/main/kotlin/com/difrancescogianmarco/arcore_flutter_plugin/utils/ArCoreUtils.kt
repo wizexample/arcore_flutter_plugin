@@ -7,18 +7,17 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
-import androidx.core.app.ActivityCompat
 import android.widget.Toast
 import androidx.annotation.Nullable
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.difrancescogianmarco.arcore_flutter_plugin.ARType
 import com.google.ar.core.ArCoreApk
-import com.google.ar.core.Config
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.*
 import java.util.*
@@ -46,20 +45,20 @@ class ArCoreUtils {
          * null. and the camera permission has been granted.
          */
         @Throws(UnavailableException::class)
-        fun createArSession(activity: Activity, userRequestedInstall: Boolean, isAugmentedFaces: Boolean): Session? {
+        fun createArSession(activity: Activity, userRequestedInstall: Boolean, arType: ARType): Session? {
             var session: Session? = null
             // if we have the camera permission, create the session
             if (hasCameraPermission(activity)) {
                 session = when (ArCoreApk.getInstance().requestInstall(activity, userRequestedInstall)) {
                     ArCoreApk.InstallStatus.INSTALL_REQUESTED -> {
-                        Log.i(TAG,"INSTALL REQUESTED")
+                        Log.i(TAG, "INSTALL REQUESTED")
                         null
                     }
-        //                    ArCoreApk.InstallStatus.INSTALLED -> {}
+                    //                    ArCoreApk.InstallStatus.INSTALLED -> {}
                     else -> {
-                        if(isAugmentedFaces){
+                        if (arType == ARType.AUGMENTED_FACES) {
                             Session(activity, EnumSet.of(Session.Feature.FRONT_CAMERA))
-                        }else{
+                        } else {
                             Session(activity)
                         }
                     }

@@ -30,7 +30,8 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 
-class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: Int, private val isAugmentedFaces: Boolean) : PlatformView, MethodChannel.MethodCallHandler {
+class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: Int,
+                 private val arType: ARType) : PlatformView, MethodChannel.MethodCallHandler {
     private val methodChannel: MethodChannel = MethodChannel(messenger, "arcore_flutter_plugin_$id")
     private val activity: Activity = (context.applicationContext as FlutterApplication).currentActivity
     lateinit var activityLifecycleCallbacks: Application.ActivityLifecycleCallbacks
@@ -98,6 +99,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                     map["centerPose"] = FlutterArCorePose(pose.translation, pose.rotationQuaternion).toHashMap()
                     map["extentX"] = augmentedImage.extentX
                     map["extentZ"] = augmentedImage.extentZ
+                    map["name"] = augmentedImage.name
 
                     methodChannel.invokeMethod("onImageDetected", map)
                 }
@@ -464,11 +466,15 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         }
 
         println("onResume ${arSceneView?.session == null} | $isReady")
+        if (arType == ARType.AUGMENTED_IMAGES && !isReady) {
+            // wait for registering images and executing [startWorldTrackingSessionWithImage]
+            return
+        }
 
-        if (arSceneView?.session == null && isReady) {
+        if (arSceneView?.session == null) {
             Log.i(TAG, "session is null")
             try {
-                val session = ArCoreUtils.createArSession(activity, mUserRequestedInstall, isAugmentedFaces)
+                val session = ArCoreUtils.createArSession(activity, mUserRequestedInstall, arType)
                 if (session == null) {
                     // Ensures next invocation of requestInstall() will either return
                     // INSTALLED or throw an exception.
@@ -476,7 +482,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                     return
                 } else {
                     val config = Config(session)
-                    if (isAugmentedFaces) {
+                    if (arType == ARType.AUGMENTED_FACES) {
                         config.augmentedFaceMode = Config.AugmentedFaceMode.MESH3D
                     }
                     setupAugmentedImageDatabase(config, session)
@@ -488,7 +494,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             } catch (ex: UnavailableUserDeclinedInstallationException) {
                 // Display an appropriate message to the user zand return gracefully.
                 Toast.makeText(activity, "TODO: handle exception " + ex.localizedMessage, Toast.LENGTH_LONG)
-                        .show();
+                        .show()
                 return
             } catch (e: UnavailableException) {
                 ArCoreUtils.handleSessionException(activity, e)
