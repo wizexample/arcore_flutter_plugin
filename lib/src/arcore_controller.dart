@@ -13,7 +13,7 @@ typedef StringResultHandler = void Function(String text);
 typedef UnsupportedHandler = void Function(String text);
 typedef ArCoreHitResultHandler = void Function(List<ArCoreHitTestResult> hits);
 typedef ArCorePlaneHandler = void Function(ARCorePlane plane);
-typedef ArCoreImageHandler = void Function(ARCoreMarker marker);
+typedef ArCoreImageHandler = void Function(ARCoreAnchor marker);
 
 class ArCoreController {
   ArCoreController({
