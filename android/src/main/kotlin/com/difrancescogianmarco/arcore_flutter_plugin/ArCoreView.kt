@@ -82,7 +82,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 if (plane.trackingState == TrackingState.TRACKING) {
 
                     val pose = plane.centerPose
-                    val map: HashMap<String, Any> = HashMap<String, Any>()
+                    val map: HashMap<String, Any> = HashMap()
+                    map["tracking"] = plane.trackingState.name
                     map["type"] = plane.type.ordinal
                     map["centerPose"] = FlutterArCorePose(pose.translation, pose.rotationQuaternion).toHashMap()
                     map["extentX"] = plane.extentX
@@ -95,11 +96,13 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 if (augmentedImage.trackingState == TrackingState.TRACKING) {
 
                     val pose = augmentedImage.centerPose
-                    val map: HashMap<String, Any> = HashMap<String, Any>()
+                    val map: HashMap<String, Any> = HashMap()
+                    map["tracking"] = augmentedImage.trackingState.name
                     map["centerPose"] = FlutterArCorePose(pose.translation, pose.rotationQuaternion).toHashMap()
                     map["extentX"] = augmentedImage.extentX
                     map["extentZ"] = augmentedImage.extentZ
                     map["name"] = augmentedImage.name
+
 
                     methodChannel.invokeMethod("onImageDetected", map)
                 }

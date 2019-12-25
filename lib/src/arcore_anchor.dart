@@ -1,11 +1,30 @@
 import 'arcore_pose.dart';
 
+enum TrackingState {
+  TRACKING,
+  PAUSED,
+  STOPPED,
+}
+
 class ARCoreAnchor {
+  TrackingState tracking;
   double extendX;
   double extendZ;
   ArCorePose centerPose;
 
   ARCoreAnchor.fromMap(Map<dynamic, dynamic> map) {
+    String trackStr = map["tracking"];
+    switch (trackStr) {
+      case "TRACKING":
+        this.tracking = TrackingState.TRACKING;
+        break;
+      case "PAUSED":
+        this.tracking = TrackingState.PAUSED;
+        break;
+      default:
+        this.tracking = TrackingState.STOPPED;
+    }
+
     this.extendX = map["extendX"];
     this.extendZ = map["extendZ"];
     this.centerPose = ArCorePose.fromMap(map["centerPose"]);
