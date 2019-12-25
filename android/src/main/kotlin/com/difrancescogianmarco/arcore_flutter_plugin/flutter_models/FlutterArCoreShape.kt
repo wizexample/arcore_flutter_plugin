@@ -1,10 +1,15 @@
 package com.difrancescogianmarco.arcore_flutter_plugin.flutter_models
 
+import android.R
+import android.widget.ImageView
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.DecodableUtils
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.Material
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.rendering.ShapeFactory
+import com.google.ar.sceneform.rendering.ViewRenderable
+import java.util.function.Consumer
+
 
 class FlutterArCoreShape(map: HashMap<String, *>) {
 
@@ -18,9 +23,9 @@ class FlutterArCoreShape(map: HashMap<String, *>) {
         if (dartType == "ArCoreSphere") {
             return ShapeFactory.makeSphere(radius!!, Vector3(0.0f, 0.15f, 0.0f), material)
         } else if (dartType == "ArCoreCube") {
-            return ShapeFactory.makeCube(size, Vector3(0.0f, 0.15f, 0.0f), material);
+            return ShapeFactory.makeCube(size, Vector3.zero(), material)
         } else if (dartType == "ArCoreCylinder") {
-            return ShapeFactory.makeCylinder(radius!!, height!!, Vector3(0.0f, 0.15f, 0.0f), material);
+            return ShapeFactory.makeCylinder(radius!!, height!!, Vector3(0.0f, 0.15f, 0.0f), material)
         } else {
             //TODO return exception
             return null
