@@ -80,7 +80,7 @@ class ArCoreController {
         }
         break;
       case 'onImageDetected':
-        if (enableUpdateListener && onPlaneDetected != null) {
+        if (enableUpdateListener && onImageDetected != null) {
           final marker = ArCoreMarker.fromMap(call.arguments);
           onImageDetected(marker);
         }
