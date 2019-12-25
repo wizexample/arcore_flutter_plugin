@@ -112,16 +112,14 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                         augmentedImageMap.put(augmentedImage, node)
                         methodChannel.invokeMethod("didAddNodeForAnchor", map)
 
-                        // test
-                        MaterialFactory.makeOpaqueWithColor(context, Color(android.graphics.Color.BLUE))
-                                .thenAccept {
-                                    val r = ShapeFactory.makeSphere(0.1f, Vector3(0.0f, 0.15f, 0.0f), it)
-                                    val testNode = Node()
-                                    testNode.renderable = r
-                                    node.addChild(testNode)
-                                }
-
-
+                        // test renderable
+//                        MaterialFactory.makeOpaqueWithColor(context, Color(android.graphics.Color.BLUE))
+//                                .thenAccept {
+//                                    val r = ShapeFactory.makeSphere(0.1f, Vector3(0.0f, 0.15f, 0.0f), it)
+//                                    val testNode = Node()
+//                                    testNode.renderable = r
+//                                    node.addChild(testNode)
+//                                }
                     }
                 }
 
