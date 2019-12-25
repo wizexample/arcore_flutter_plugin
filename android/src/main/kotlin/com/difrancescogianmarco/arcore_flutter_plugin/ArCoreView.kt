@@ -102,7 +102,18 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 map["extentX"] = augmentedImage.extentX
                 map["extentZ"] = augmentedImage.extentZ
                 map["name"] = augmentedImage.name
-
+                var hasAnchorNode = false
+                arSceneView?.scene?.children?.forEach {
+                    if (it.name == augmentedImage.name) {
+                        hasAnchorNode = true
+                        return@forEach
+                    }
+                }
+                if (!hasAnchorNode) {
+                    val node = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
+                    node.name = augmentedImage.name
+                    arSceneView?.scene?.addChild(node)
+                }
 
                 methodChannel.invokeMethod("onImageDetected", map)
 //                }
