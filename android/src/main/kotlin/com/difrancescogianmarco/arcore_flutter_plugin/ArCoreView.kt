@@ -21,14 +21,15 @@ import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.UnavailableException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 import com.google.ar.sceneform.*
-import com.google.ar.sceneform.rendering.ModelRenderable
-import com.google.ar.sceneform.rendering.Texture
+import com.google.ar.sceneform.math.Vector3
+import com.google.ar.sceneform.rendering.*
 import com.google.ar.sceneform.ux.AugmentedFaceNode
 import io.flutter.app.FlutterApplication
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
+
 
 class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: Int,
                  private val arType: ARType) : PlatformView, MethodChannel.MethodCallHandler {
@@ -110,6 +111,17 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                         arSceneView?.scene?.addChild(node)
                         augmentedImageMap.put(augmentedImage, node)
                         methodChannel.invokeMethod("didAddNodeForAnchor", map)
+
+                        // test
+                        MaterialFactory.makeOpaqueWithColor(context, Color(android.graphics.Color.BLUE))
+                                .thenAccept {
+                                    val r = ShapeFactory.makeSphere(0.1f, Vector3(0.0f, 0.15f, 0.0f), it)
+                                    val testNode = Node()
+                                    testNode.renderable = r
+                                    node.addChild(testNode)
+                                }
+
+
                     }
                 }
 
