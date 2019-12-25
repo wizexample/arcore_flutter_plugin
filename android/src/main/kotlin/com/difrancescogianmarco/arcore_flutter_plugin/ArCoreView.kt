@@ -468,7 +468,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
         println("onResume ${arSceneView?.session == null} | ${arType.name} | $isReady")
 
-        if (arSceneView?.session == null && (arType == ARType.AUGMENTED_IMAGES && !isReady)) {
+        if (arSceneView?.session == null && (arType != ARType.AUGMENTED_IMAGES || isReady)) {
             Log.i(TAG, "session is null")
             try {
                 val session = ArCoreUtils.createArSession(activity, mUserRequestedInstall, arType)
