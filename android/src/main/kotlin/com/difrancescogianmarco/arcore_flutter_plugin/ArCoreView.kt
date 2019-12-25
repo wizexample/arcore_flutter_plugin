@@ -192,7 +192,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             "addArCoreNode" -> {
                 Log.i(TAG, " addArCoreNode")
                 val map = call.arguments as HashMap<String, Any>
-                val flutterNode = FlutterArCoreNode(map);
+                println("□■□■ addArCoreNode: $map")
+                val flutterNode = FlutterArCoreNode(map)
                 onAddNode(flutterNode, result)
             }
             "addArCoreNodeWithAnchor" -> {
