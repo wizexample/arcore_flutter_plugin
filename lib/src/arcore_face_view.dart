@@ -36,7 +36,7 @@ class _ArCoreFaceViewState extends State<ArCoreFaceView>
         child: ArCoreAndroidView(
           viewType: 'arcore_flutter_plugin',
           onPlatformViewCreated: _onPlatformViewCreated,
-          arCoreViewType: ArCoreViewType.AUGMENTEDFACE,
+          arCoreViewType: ArCoreViewType.AUGMENTED_FACE,
         ),
       );
     }

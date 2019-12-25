@@ -13,14 +13,16 @@ class ArCoreAndroidView extends AndroidView {
     Key key,
     @required this.viewType,
     this.onPlatformViewCreated,
-    this.arCoreViewType = ArCoreViewType.STANDARDVIEW,
+    this.arCoreViewType = ArCoreViewType.STANDARD_VIEW,
   }) : super(
           viewType: viewType,
           onPlatformViewCreated: onPlatformViewCreated,
           creationParams: <String, dynamic>{
-            "type": arCoreViewType == ArCoreViewType.AUGMENTEDFACE
+            "type": arCoreViewType == ArCoreViewType.AUGMENTED_FACE
                 ? "faces"
-                : "standard"
+                : arCoreViewType == ArCoreViewType.AUGMENTED_IMAGE
+                    ? "images"
+                    : "standard"
           },
           creationParamsCodec: const StandardMessageCodec(),
         );

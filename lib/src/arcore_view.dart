@@ -6,8 +6,9 @@ import 'package:flutter/material.dart';
 typedef void ArCoreViewCreatedCallback(ArCoreController controller);
 
 enum ArCoreViewType {
-  AUGMENTEDFACE,
-  STANDARDVIEW,
+  AUGMENTED_FACE,
+  AUGMENTED_IMAGE,
+  STANDARD_VIEW,
 }
 
 class ArCoreView extends StatefulWidget {
@@ -21,11 +22,11 @@ class ArCoreView extends StatefulWidget {
 
   const ArCoreView({
     Key key,
-    @required this.onArCoreViewCreated,
-//    @required this.onArCoreUnsupported,
+    @required
+        this.onArCoreViewCreated, //    @required this.onArCoreUnsupported,
     this.enableTapRecognizer = false,
     this.enableUpdateListener = false,
-    this.type = ArCoreViewType.STANDARDVIEW,
+    this.type = ArCoreViewType.STANDARD_VIEW,
   }) : super(key: key);
 
   @override
