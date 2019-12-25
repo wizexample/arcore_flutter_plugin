@@ -168,6 +168,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        println("onMethodCall: ${call.method}, ${call.arguments}")
         when (call.method) {
             "init" -> {
                 arScenViewInit(call, result, activity)
@@ -465,7 +466,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             ArCoreUtils.requestCameraPermission(activity, RC_PERMISSIONS)
         }
 
-        println("onResume ${arSceneView?.session == null} | $isReady")
+        println("onResume ${arSceneView?.session == null} | ${arType.name} | $isReady")
         if (arType == ARType.AUGMENTED_IMAGES && !isReady) {
             // wait for registering images and executing [startWorldTrackingSessionWithImage]
             return
