@@ -36,6 +36,7 @@ class ArCoreController {
   ArCoreHitResultHandler onPlaneTap;
   ArCorePlaneHandler onPlaneDetected;
   ArCoreImageHandler onImageDetected;
+  ArCoreImageHandler onAddNodeForAnchor;
 
   init() async {
     try {
@@ -82,6 +83,12 @@ class ArCoreController {
         if (enableUpdateListener && onImageDetected != null) {
           final marker = ARCoreMarker.fromMap(call.arguments);
           onImageDetected(marker);
+        }
+        break;
+      case 'didAddNodeForAnchor':
+        if (enableUpdateListener && onAddNodeForAnchor != null) {
+          final marker = ARCoreMarker.fromMap(call.arguments);
+          onAddNodeForAnchor(marker);
         }
         break;
       default:

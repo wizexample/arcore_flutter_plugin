@@ -52,6 +52,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private val augmentedImageParams = ArrayList<ARReferenceImage>()
     private var augmentedImageDatabase: AugmentedImageDatabase? = null
     private var isReady = false
+    private val augmentedImageMap = HashMap<AugmentedImage, Node>()
 
     init {
         methodChannel.setMethodCallHandler(this)
@@ -103,17 +104,12 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 map["extentZ"] = augmentedImage.extentZ
                 map["name"] = augmentedImage.name
                 if (augmentedImage.trackingState == TrackingState.TRACKING) {
-                    var hasAnchorNode = false
-                    arSceneView?.scene?.children?.forEach {
-                        if (it.name == augmentedImage.name) {
-                            hasAnchorNode = true
-                            return@forEach
-                        }
-                    }
-                    if (!hasAnchorNode) {
+                    if (!augmentedImageMap.containsKey(augmentedImage)) {
                         val node = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
                         node.name = augmentedImage.name
                         arSceneView?.scene?.addChild(node)
+                        augmentedImageMap.put(augmentedImage, node)
+                        methodChannel.invokeMethod("didAddNodeForAnchor", map)
                     }
                 }
 
