@@ -389,9 +389,11 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     fun onAddNode(flutterArCoreNode: FlutterArCoreNode, result: MethodChannel.Result?) {
 
         Log.i(TAG, flutterArCoreNode.toString())
+        println("□■□■ onAddNode $flutterArCoreNode")
         NodeFactory.makeNode(activity.applicationContext, flutterArCoreNode) { node, throwable ->
 
             Log.i(TAG, "inserted ${node?.name}")
+            println("□■□■ insert ${node != null}")
 
 /*            if (flutterArCoreNode.parentNodeName != null) {
                 Log.i(TAG, flutterArCoreNode.parentNodeName);
