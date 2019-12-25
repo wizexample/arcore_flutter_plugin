@@ -14,7 +14,7 @@ typedef StringResultHandler = void Function(String text);
 typedef UnsupportedHandler = void Function(String text);
 typedef ArCoreHitResultHandler = void Function(List<ArCoreHitTestResult> hits);
 typedef ArCorePlaneHandler = void Function(ArCorePlane plane);
-typedef ArCoreImageHandler = void Function(ArCoreMarker marker);
+typedef ArCoreImageHandler = void Function(ARCoreMarker marker);
 
 class ArCoreController {
   ArCoreController({
@@ -81,7 +81,7 @@ class ArCoreController {
         break;
       case 'onImageDetected':
         if (enableUpdateListener && onImageDetected != null) {
-          final marker = ArCoreMarker.fromMap(call.arguments);
+          final marker = ARCoreMarker.fromMap(call.arguments);
           onImageDetected(marker);
         }
         break;
