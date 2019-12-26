@@ -65,7 +65,6 @@ class RenderableCustomFactory {
                 var sizer: ViewSizer? = null
                 (flutterArCoreNode.shape.params["side"] as? String)?.let {
                     val size = (flutterArCoreNode.shape.params["size"] as? Number ?: 1.0).toFloat()
-                    println("□■□■ side: $it / size: $size")
                     when (it) {
                         "FixedSide.WIDTH" -> sizer = FixedWidthViewSizer(size)
                         "FixedSide.HEIGHT" -> sizer = FixedHeightViewSizer(size)
