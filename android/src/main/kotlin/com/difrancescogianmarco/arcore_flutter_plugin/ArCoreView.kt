@@ -21,8 +21,8 @@ import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.UnavailableException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 import com.google.ar.sceneform.*
-import com.google.ar.sceneform.math.Vector3
-import com.google.ar.sceneform.rendering.*
+import com.google.ar.sceneform.rendering.ModelRenderable
+import com.google.ar.sceneform.rendering.Texture
 import com.google.ar.sceneform.ux.AugmentedFaceNode
 import io.flutter.app.FlutterApplication
 import io.flutter.plugin.common.BinaryMessenger
@@ -198,7 +198,6 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             "addArCoreNode" -> {
                 Log.i(TAG, " addArCoreNode")
                 val map = call.arguments as HashMap<String, Any>
-                println("□■□■ addArCoreNode: $map")
                 val flutterNode = FlutterArCoreNode(map)
                 onAddNode(flutterNode, result)
             }
@@ -366,7 +365,6 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     fun addNodeWithAnchor(flutterArCoreNode: FlutterArCoreNode, result: MethodChannel.Result) {
-
         if (arSceneView == null) {
             return
         }
@@ -395,11 +393,9 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     fun onAddNode(flutterArCoreNode: FlutterArCoreNode, result: MethodChannel.Result?) {
 
         Log.i(TAG, flutterArCoreNode.toString())
-        println("□■□■ onAddNode $flutterArCoreNode")
         NodeFactory.makeNode(activity.applicationContext, flutterArCoreNode) { node, throwable ->
 
             Log.i(TAG, "inserted ${node?.name}")
-            println("□■□■ insert ${node != null}")
 
 /*            if (flutterArCoreNode.parentNodeName != null) {
                 Log.i(TAG, flutterArCoreNode.parentNodeName);

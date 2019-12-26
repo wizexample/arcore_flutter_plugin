@@ -1,23 +1,19 @@
 package com.difrancescogianmarco.arcore_flutter_plugin.flutter_models
 
-import android.R
-import android.widget.ImageView
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.DecodableUtils
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.Material
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.rendering.ShapeFactory
-import com.google.ar.sceneform.rendering.ViewRenderable
-import java.util.function.Consumer
 
 
-class FlutterArCoreShape(map: HashMap<String, *>) {
+class FlutterArCoreShape(val params: HashMap<String, *>) {
 
-    val dartType: String = map["dartType"] as String
-    val materials: ArrayList<FlutterArCoreMaterial> = getMaterials(map["materials"] as ArrayList<HashMap<String, *>>)
-    val radius: Float? = (map["radius"] as? Double)?.toFloat()
-    val size = DecodableUtils.parseVector3(map["size"] as? HashMap<String, Any>) ?: Vector3()
-    val height: Float? = (map["height"] as? Double)?.toFloat()
+    val dartType: String = params["dartType"] as String
+    val materials: ArrayList<FlutterArCoreMaterial> = getMaterials(params["materials"] as ArrayList<HashMap<String, *>>)
+    val radius: Float? = (params["radius"] as? Double)?.toFloat()
+    val size = DecodableUtils.parseVector3(params["size"] as? HashMap<String, Any>) ?: Vector3()
+    val height: Float? = (params["height"] as? Double)?.toFloat()
 
     fun buildShape(material: Material): ModelRenderable? {
         if (dartType == "ArCoreSphere") {

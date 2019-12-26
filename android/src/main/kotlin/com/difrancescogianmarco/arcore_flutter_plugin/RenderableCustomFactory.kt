@@ -5,14 +5,14 @@ import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
+import android.widget.ImageView
 import android.widget.Toast
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
 import com.google.ar.sceneform.assets.RenderableSource
-import com.google.ar.sceneform.rendering.Material
-import com.google.ar.sceneform.rendering.ModelRenderable
+import com.google.ar.sceneform.rendering.*
 
 typealias MaterialHandler = (Material?, Throwable?) -> Unit
-typealias RenderableHandler = (ModelRenderable?, Throwable?) -> Unit
+typealias RenderableHandler = (Renderable?, Throwable?) -> Unit
 
 class RenderableCustomFactory {
 
@@ -21,7 +21,6 @@ class RenderableCustomFactory {
         val TAG = RenderableCustomFactory::class.java.name
         @SuppressLint("ShowToast")
         fun makeRenderable(context: Context, flutterArCoreNode: FlutterArCoreNode, handler: RenderableHandler) {
-
 
             if (flutterArCoreNode.dartType == "ArCoreReferenceNode") {
 
@@ -61,7 +60,31 @@ class RenderableCustomFactory {
                                 null
                             }
                 }
+            } else if (flutterArCoreNode.shape?.dartType == "ARCoreImageView") {
+                val bytes = flutterArCoreNode.shape.materials.first().textureBytes ?: return
+                var sizer: ViewSizer? = null
+                (flutterArCoreNode.shape.params["side"] as? String)?.let {
+                    val size = (flutterArCoreNode.shape.params["size"] as? Number ?: 1.0).toFloat()
+                    println("□■□■ side: $it / size: $size")
+                    when (it) {
+                        "FixedSide.WIDTH" -> sizer = FixedWidthViewSizer(size)
+                        "FixedSide.HEIGHT" -> sizer = FixedHeightViewSizer(size)
+                    }
+                }
+                val image = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
 
+                val imageView = ImageView(context)
+                imageView.setImageBitmap(image)
+                val fr = ViewRenderable
+                        .builder()
+                        .setView(context, imageView)
+                if (sizer != null) {
+                    fr.setSizer(sizer)
+                }
+                fr.build()
+                        .thenAccept {
+                            handler(it, null)
+                        }
             } else {
                 makeMaterial(context, flutterArCoreNode) { material, throwable ->
                     if (material != null) {

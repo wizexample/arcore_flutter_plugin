@@ -38,6 +38,7 @@ flutter:
     - assets/ArcticFox.gif
     - assets/TocoToucan.gif
     - assets/fox_face_mesh_texture.png
+    - assets/arTarget1.jpg
 #    - assets/prova_texture.png
 #    - assets/venom.jpg
 #    - assets/venom_with_eyes.jpg

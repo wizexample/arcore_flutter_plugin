@@ -28,9 +28,24 @@ class _HelloWorldState extends State<HelloWorld> {
   void _onArCoreViewCreated(ArCoreController controller) {
     arCoreController = controller;
 
+    _addImageView(arCoreController);
     _addSphere(arCoreController);
     _addCylindre(arCoreController);
     _addCube(arCoreController);
+  }
+
+  Future _addImageView(ArCoreController controller) async {
+    final ByteData textureBytes = await rootBundle.load('assets/arTarget1.jpg');
+
+    final view = ARCoreImageView(
+        imageBytes: textureBytes.buffer.asUint8List(),
+        fixedSide: FixedSide.HEIGHT,
+        size: 0.3);
+    final node = ArCoreNode(
+      shape: view,
+      position: vector.Vector3(0, 0, -1.5),
+    );
+    controller.addArCoreNode(node);
   }
 
   Future _addSphere(ArCoreController controller) async {

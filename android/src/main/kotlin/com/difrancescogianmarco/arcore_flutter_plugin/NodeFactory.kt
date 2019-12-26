@@ -14,10 +14,8 @@ class NodeFactory {
 
         fun makeNode(context: Context, flutterNode: FlutterArCoreNode, handler: NodeHandler) {
             Log.i(TAG, flutterNode.toString())
-            println("□■□■ makeNode")
             val node = flutterNode.buildNode()
             RenderableCustomFactory.makeRenderable(context, flutterNode) { renderable, t ->
-                println("□■□■ makeRenderable")
                 if (renderable != null) {
                     node.renderable = renderable
                     handler(node, null)

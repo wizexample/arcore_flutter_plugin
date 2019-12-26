@@ -11,4 +11,5 @@ export 'package:arcore_flutter_plugin/src/arcore_rotating_node.dart';
 export 'package:arcore_flutter_plugin/src/arcore_view.dart';
 export 'package:arcore_flutter_plugin/src/shape/arcore_cube.dart';
 export 'package:arcore_flutter_plugin/src/shape/arcore_cylindre.dart';
+export 'package:arcore_flutter_plugin/src/shape/arcore_imageview.dart';
 export 'package:arcore_flutter_plugin/src/shape/arcore_sphere.dart';
