@@ -11,12 +11,14 @@ class ArCoreNode {
     String name,
     Vector3 position,
     Vector3 scale,
-    Vector4 rotation,
+    dynamic rotation,
     this.children = const [],
   })  : name = name ?? random_string.randomString(),
         position = ValueNotifier(position),
         scale = ValueNotifier(scale),
-        rotation = ValueNotifier(rotation);
+        rotation = ValueNotifier(rotation is Quaternion
+            ? quaternionToVec4(rotation)
+            : rotation is Vector4 ? rotation : null);
 
   final List<ArCoreNode> children;
 
