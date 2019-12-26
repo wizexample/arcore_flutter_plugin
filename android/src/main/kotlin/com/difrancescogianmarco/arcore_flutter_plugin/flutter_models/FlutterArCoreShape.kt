@@ -17,11 +17,11 @@ class FlutterArCoreShape(val params: HashMap<String, *>) {
 
     fun buildShape(material: Material): ModelRenderable? {
         if (dartType == "ArCoreSphere") {
-            return ShapeFactory.makeSphere(radius!!, Vector3(0.0f, 0.15f, 0.0f), material)
+            return ShapeFactory.makeSphere(radius!!, Vector3.zero(), material)
         } else if (dartType == "ArCoreCube") {
             return ShapeFactory.makeCube(size, Vector3.zero(), material)
         } else if (dartType == "ArCoreCylinder") {
-            return ShapeFactory.makeCylinder(radius!!, height!!, Vector3(0.0f, 0.15f, 0.0f), material)
+            return ShapeFactory.makeCylinder(radius!!, height!!, Vector3.zero(), material)
         } else {
             //TODO return exception
             return null

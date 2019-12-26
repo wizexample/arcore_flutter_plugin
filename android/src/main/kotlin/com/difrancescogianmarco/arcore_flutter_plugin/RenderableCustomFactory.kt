@@ -82,6 +82,7 @@ class RenderableCustomFactory {
                 }
                 fr.build()
                         .thenAccept {
+                            it.verticalAlignment = ViewRenderable.VerticalAlignment.CENTER
                             handler(it, null)
                         }
             } else {
