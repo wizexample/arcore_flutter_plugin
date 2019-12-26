@@ -199,12 +199,14 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 Log.i(TAG, " addArCoreNode")
                 val map = call.arguments as HashMap<String, Any>
                 val flutterNode = FlutterArCoreNode(map)
+                println("□■□■ addArCoreNode: ${flutterNode.toString()}")
                 onAddNode(flutterNode, result)
             }
             "addArCoreNodeWithAnchor" -> {
                 Log.i(TAG, " addArCoreNode")
                 val map = call.arguments as HashMap<String, Any>
                 val flutterNode = FlutterArCoreNode(map);
+                println("□■□■ addArCoreNodeWithAnchor: ${flutterNode.toString()}")
                 addNodeWithAnchor(flutterNode, result)
             }
             "removeARCoreNode" -> {
@@ -505,7 +507,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                     }
                     setupAugmentedImageDatabase(config, session)
                     config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
-                    config.focusMode = Config.FocusMode.AUTO;
+                    config.focusMode = Config.FocusMode.AUTO
                     session.configure(config)
                     arSceneView?.setupSession(session)
                 }
