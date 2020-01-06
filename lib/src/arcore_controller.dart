@@ -144,6 +144,7 @@ class ArCoreController {
   void _addListeners(ArCoreNode node) {
     node.position.addListener(() => _handlePositionChanged(node));
     node?.shape?.materials?.addListener(() => _updateMaterials(node));
+    node.isHidden.addListener(() => _handleVisibilityChanged(node));
 
     if (node is ArCoreRotatingNode) {
       node.degreesPerSecond.addListener(() => _handleRotationChanged(node));
@@ -158,6 +159,11 @@ class ArCoreController {
   void _handleRotationChanged(ArCoreRotatingNode node) {
     _channel.invokeMethod<void>('rotationChanged',
         {'name': node.name, 'degreesPerSecond': node.degreesPerSecond.value});
+  }
+
+  void _handleVisibilityChanged(ArCoreRotatingNode node) {
+    _channel.invokeMethod<void>('visibilityChanged',
+        {'name': node.name, 'visibility': !node.isHidden.value});
   }
 
   void _updateMaterials(ArCoreNode node) {

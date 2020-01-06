@@ -223,6 +223,9 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 updateRotation(call, result)
 
             }
+            "visibilityChanged" -> {
+                updateVisibility(call, result)
+            }
             "updateMaterials" -> {
                 Log.i(TAG, " updateMaterials")
                 updateMaterials(call, result)
@@ -451,6 +454,13 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             node.degreesPerSecond = degreesPerSecond.toFloat()
         }
         result.success(null)
+    }
+
+    fun updateVisibility(call: MethodCall, result: MethodChannel.Result) {
+        val name = call.argument<String>("name")
+        val node = arSceneView?.scene?.findByName(name) ?: return
+        val visibility = call.argument<Boolean>("visibility") ?: false
+        node.isEnabled = visibility
     }
 
     fun updateMaterials(call: MethodCall, result: MethodChannel.Result) {

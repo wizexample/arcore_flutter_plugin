@@ -12,13 +12,15 @@ class ArCoreNode {
     Vector3 position,
     Vector3 scale,
     dynamic rotation,
+    bool isHidden,
     this.children = const [],
   })  : name = name ?? random_string.randomString(),
         position = ValueNotifier(position),
         scale = ValueNotifier(scale),
         rotation = ValueNotifier(rotation is Quaternion
             ? quaternionToVec4(rotation)
-            : rotation is Vector4 ? rotation : null);
+            : rotation is Vector4 ? rotation : null),
+        isHidden = ValueNotifier(isHidden ?? false);
 
   final List<ArCoreNode> children;
 
@@ -32,6 +34,8 @@ class ArCoreNode {
 
   final String name;
 
+  final ValueNotifier<bool> isHidden;
+
   Map<String, dynamic> toMap() => <String, dynamic>{
         'dartType': runtimeType.toString(),
         'shape': shape?.toMap(),
@@ -41,5 +45,6 @@ class ArCoreNode {
         'name': name,
         'children':
             this.children.map((arCoreNode) => arCoreNode.toMap()).toList(),
+        'isHidden': isHidden.value,
       }..removeWhere((String k, dynamic v) => v == null);
 }
