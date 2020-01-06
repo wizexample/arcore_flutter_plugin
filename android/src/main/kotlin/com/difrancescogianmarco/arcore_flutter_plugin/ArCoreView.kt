@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
 import android.view.GestureDetector
@@ -21,6 +22,7 @@ import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.UnavailableException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 import com.google.ar.sceneform.*
+import com.google.ar.sceneform.rendering.ExternalTexture
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.rendering.Texture
 import com.google.ar.sceneform.ux.AugmentedFaceNode
@@ -54,6 +56,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private var augmentedImageDatabase: AugmentedImageDatabase? = null
     private var isReady = false
     private val augmentedImageMap = HashMap<AugmentedImage, Node>()
+
+    private val mediaPlayers = ArrayList<MediaPlayer>()
 
     init {
         methodChannel.setMethodCallHandler(this)
@@ -205,7 +209,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             "addArCoreNodeWithAnchor" -> {
                 Log.i(TAG, " addArCoreNode")
                 val map = call.arguments as HashMap<String, Any>
-                val flutterNode = FlutterArCoreNode(map);
+                val flutterNode = FlutterArCoreNode(map)
                 println("□■□■ addArCoreNodeWithAnchor: ${flutterNode.shape?.dartType}")
                 addNodeWithAnchor(flutterNode, result)
             }
@@ -382,6 +386,17 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                     anchorNode.name = flutterArCoreNode.name
                     anchorNode.renderable = renderable
 
+                    if (flutterArCoreNode.shape?.dartType == "ARCoreVideoView") {
+                        val texture = ExternalTexture()
+                        val mediaPlayer = MediaPlayer()
+                        mediaPlayer.setDataSource("")
+                        mediaPlayer.setSurface(texture.surface)
+                        mediaPlayer.isLooping = true
+                        mediaPlayers.add(mediaPlayer)
+
+                        renderable.material.setExternalTexture("videoTexture", texture)
+                    }
+
                     Log.i(TAG, "inserted ${anchorNode.name}")
                     attachNodeToParent(anchorNode, flutterArCoreNode.parentNodeName)
 
@@ -552,6 +567,10 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     fun onDestroy() {
+        mediaPlayers.forEach { player ->
+            player.release()
+        }
+
         if (arSceneView != null) {
             arSceneView?.scene?.removeOnUpdateListener(sceneUpdateListener)
             arSceneView?.scene?.removeOnUpdateListener(faceSceneUpdateListener)

@@ -1,6 +1,5 @@
 package com.difrancescogianmarco.arcore_flutter_plugin
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -8,6 +7,7 @@ import android.util.Log
 import android.widget.ImageView
 import android.widget.Toast
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
+import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreShape
 import com.google.ar.sceneform.assets.RenderableSource
 import com.google.ar.sceneform.rendering.*
 
@@ -19,84 +19,105 @@ class RenderableCustomFactory {
     companion object {
 
         val TAG = RenderableCustomFactory::class.java.name
-        @SuppressLint("ShowToast")
         fun makeRenderable(context: Context, flutterArCoreNode: FlutterArCoreNode, handler: RenderableHandler) {
 
             if (flutterArCoreNode.dartType == "ArCoreReferenceNode") {
-
-                val url = flutterArCoreNode.objectUrl
-
-                val localObject = flutterArCoreNode.obcject3DFileName
-
-                if (localObject != null) {
-                    val builder = ModelRenderable.builder()
-                    builder.setSource(context, Uri.parse(localObject))
-                    builder.build().thenAccept { renderable ->
-                        handler(renderable, null)
-                    }.exceptionally { throwable ->
-                        Log.e(TAG, "Unable to load Renderable.", throwable);
-                        handler(null, throwable)
-                        return@exceptionally null
-                    }
-                } else if (url != null) {
-                    val modelRenderableBuilder = ModelRenderable.builder()
-                    val renderableSourceBuilder = RenderableSource.builder()
-
-                    renderableSourceBuilder
-                            .setSource(context, Uri.parse(url), RenderableSource.SourceType.GLTF2)
-                            .setScale(0.5f)
-                            .setRecenterMode(RenderableSource.RecenterMode.ROOT)
-
-                    modelRenderableBuilder
-                            .setSource(context, renderableSourceBuilder.build())
-                            .setRegistryId(url)
-                            .build()
-                            .thenAccept { renderable ->
-                                handler(renderable, null)
-                            }
-                            .exceptionally { throwable ->
-                                handler(null, throwable)
-                                Log.i(TAG, "renderable error ${throwable.localizedMessage}")
-                                null
-                            }
-                }
+                makeReferenceRenderable(context, flutterArCoreNode, handler)
             } else if (flutterArCoreNode.shape?.dartType == "ARCoreImageView") {
-                val bytes = flutterArCoreNode.shape.materials.first().textureBytes ?: return
-                var sizer: ViewSizer? = null
-                (flutterArCoreNode.shape.params["side"] as? String)?.let {
-                    val size = (flutterArCoreNode.shape.params["size"] as? Number ?: 1.0).toFloat()
-                    when (it) {
-                        "FixedSide.WIDTH" -> sizer = FixedWidthViewSizer(size)
-                        "FixedSide.HEIGHT" -> sizer = FixedHeightViewSizer(size)
-                    }
-                }
-                val image = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-
-                val imageView = ImageView(context)
-                imageView.setImageBitmap(image)
-                val fr = ViewRenderable
-                        .builder()
-                        .setView(context, imageView)
-                if (sizer != null) {
-                    fr.setSizer(sizer)
-                }
-                fr.build()
-                        .thenAccept {
-                            it.verticalAlignment = ViewRenderable.VerticalAlignment.CENTER
-                            handler(it, null)
-                        }
+                makeImageViewRenderable(context, flutterArCoreNode.shape, handler)
+            } else if (flutterArCoreNode.shape?.dartType == "ARCoreVideoView") {
+                makeVideoRenderable(context, flutterArCoreNode, handler)
             } else {
-                makeMaterial(context, flutterArCoreNode) { material, throwable ->
-                    if (material != null) {
-                        Log.i(TAG, "material not null")
-                        try {
-                            val renderable = flutterArCoreNode.shape?.buildShape(material)
+                makePrimitiveShapeRenderable(context, flutterArCoreNode, handler)
+            }
+        }
+
+        private fun makeReferenceRenderable(context: Context, flutterArCoreNode: FlutterArCoreNode, handler: RenderableHandler) {
+            val url = flutterArCoreNode.objectUrl
+
+            val localObject = flutterArCoreNode.obcject3DFileName
+
+            if (localObject != null) {
+                val builder = ModelRenderable.builder()
+                builder.setSource(context, Uri.parse(localObject))
+                builder.build().thenAccept { renderable ->
+                    handler(renderable, null)
+                }.exceptionally { throwable ->
+                    Log.e(TAG, "Unable to load Renderable.", throwable);
+                    handler(null, throwable)
+                    return@exceptionally null
+                }
+            } else if (url != null) {
+                val modelRenderableBuilder = ModelRenderable.builder()
+                val renderableSourceBuilder = RenderableSource.builder()
+
+                renderableSourceBuilder
+                        .setSource(context, Uri.parse(url), RenderableSource.SourceType.GLTF2)
+                        .setScale(0.5f)
+                        .setRecenterMode(RenderableSource.RecenterMode.ROOT)
+
+                modelRenderableBuilder
+                        .setSource(context, renderableSourceBuilder.build())
+                        .setRegistryId(url)
+                        .build()
+                        .thenAccept { renderable ->
                             handler(renderable, null)
-                        } catch (ex: Exception) {
-                            Log.i(TAG, "renderable error ${ex}")
-                            handler(null, ex)
-                            Toast.makeText(context, ex.toString(), Toast.LENGTH_LONG)
                         }
+                        .exceptionally { throwable ->
+                            handler(null, throwable)
+                            Log.i(TAG, "renderable error ${throwable.localizedMessage}")
+                            null
+                        }
+            }
+        }
+
+        private fun makeImageViewRenderable(context: Context, shape: FlutterArCoreShape, handler: RenderableHandler) {
+            val bytes = shape.materials.first().textureBytes ?: return
+            var sizer: ViewSizer? = null
+            (shape.params["side"] as? String)?.let {
+                val size = (shape.params["size"] as? Number ?: 1.0).toFloat()
+                when (it) {
+                    "FixedSide.WIDTH" -> sizer = FixedWidthViewSizer(size)
+                    "FixedSide.HEIGHT" -> sizer = FixedHeightViewSizer(size)
+                }
+            }
+            val image = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+
+            val imageView = ImageView(context)
+            imageView.setImageBitmap(image)
+            val fr = ViewRenderable
+                    .builder()
+                    .setView(context, imageView)
+            if (sizer != null) {
+                fr.setSizer(sizer)
+            }
+            fr.build()
+                    .thenAccept {
+                        it.verticalAlignment = ViewRenderable.VerticalAlignment.CENTER
+                        handler(it, null)
+                    }
+        }
+
+        private fun makeVideoRenderable(context: Context, flutterArCoreNode: FlutterArCoreNode, handler: RenderableHandler) {
+            ModelRenderable.builder()
+                    .setSource(context, R.raw.chroma_key_video)
+                    .build()
+                    .thenAccept {
+                        handler(it, null)
+                    }
+        }
+
+        private fun makePrimitiveShapeRenderable(context: Context, flutterArCoreNode: FlutterArCoreNode, handler: RenderableHandler) {
+            makeMaterial(context, flutterArCoreNode) { material, throwable ->
+                if (material != null) {
+                    Log.i(TAG, "material not null")
+                    try {
+                        val renderable = flutterArCoreNode.shape?.buildShape(material)
+                        handler(renderable, null)
+                    } catch (ex: Exception) {
+                        Log.i(TAG, "renderable error $ex")
+                        handler(null, ex)
+                        Toast.makeText(context, ex.toString(), Toast.LENGTH_LONG).show()
                     }
                 }
             }

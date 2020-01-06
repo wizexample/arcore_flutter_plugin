@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:arcore_flutter_plugin/src/arcore_anchor.dart';
 import 'package:arcore_flutter_plugin/src/arcore_rotating_node.dart';
+import 'package:arcore_flutter_plugin/src/arcore_video_node.dart';
 import 'package:arcore_flutter_plugin/src/utils/vector_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:meta/meta.dart';
@@ -148,6 +149,9 @@ class ArCoreController {
 
     if (node is ArCoreRotatingNode) {
       node.degreesPerSecond.addListener(() => _handleRotationChanged(node));
+    }
+    if (node is ARCoreVideoNode) {
+      // todo handling onPlay / onPause
     }
   }
 
