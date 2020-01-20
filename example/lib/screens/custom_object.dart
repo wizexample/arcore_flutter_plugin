@@ -35,37 +35,41 @@ class _CustomObjectState extends State<CustomObject> {
   }
 
   Future _addSphere(ArCoreHitTestResult plane) async {
-    final moonMaterial = ArCoreMaterial(color: Colors.grey);
+    final moonMaterial = ARToolKitMaterial(
+      diffuse: ARToolKitMaterialProperty(color: Colors.grey),
+    );
 
-    final moonShape = ArCoreSphere(
+    final moonShape = ARToolKitSphere(
       materials: [moonMaterial],
       radius: 0.03,
     );
 
     final moon = ArCoreNode(
-      shape: moonShape,
+      geometry: moonShape,
       position: vector.Vector3(0.2, 0, 0),
       rotation: vector.Vector4(0, 0, 0, 0),
     );
 
     final ByteData textureBytes = await rootBundle.load('assets/earth.jpg');
 
-    final earthMaterial = ArCoreMaterial(
-        color: Color.fromARGB(120, 66, 134, 244),
-        textureBytes: textureBytes.buffer.asUint8List());
+    final earthMaterial = ARToolKitMaterial(
+      diffuse: ARToolKitMaterialProperty(
+          color: Color.fromARGB(120, 66, 134, 244),
+          pixelData: PixelData(textureBytes.buffer.asUint8List())),
+    );
 
-    final earthShape = ArCoreSphere(
+    final earthShape = ARToolKitSphere(
       materials: [earthMaterial],
       radius: 0.1,
     );
 
     final earth = ArCoreNode(
-        shape: earthShape,
+        geometry: earthShape,
         children: [moon],
         position: plane.pose.translation + vector.Vector3(0.0, 1.0, 0.0),
         rotation: plane.pose.rotation);
 
-    arCoreController.addArCoreNodeWithAnchor(earth);
+    arCoreController.add(earth);
   }
 
   void _handleOnPlaneTap(List<ArCoreHitTestResult> hits) {

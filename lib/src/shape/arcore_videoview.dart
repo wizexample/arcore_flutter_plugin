@@ -1,6 +1,5 @@
+import 'package:arcore_flutter_plugin/src/shape/arcore_shape.dart';
 import 'package:meta/meta.dart';
-
-import '../../arcore_flutter_plugin.dart';
 
 class ARCoreVideoView extends ArCoreShape {
   ARCoreVideoView({@required String file, double size})

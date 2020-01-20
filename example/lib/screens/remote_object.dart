@@ -35,12 +35,11 @@ class _RemoteObjectState extends State<RemoteObject> {
   void _addToucano(ArCoreHitTestResult plane) {
     final toucanNode = ArCoreReferenceNode(
         name: "Toucano",
-        objectUrl:
+        url:
             "https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Duck/glTF/Duck.gltf",
-        position: plane.pose.translation,
-        rotation: plane.pose.rotation);
+        position: plane.pose.translation);
 
-    arCoreController.addArCoreNodeWithAnchor(toucanNode);
+    arCoreController.add(toucanNode);
   }
 
   void _handleOnPlaneTap(List<ArCoreHitTestResult> hits) {
@@ -61,7 +60,7 @@ class _RemoteObjectState extends State<RemoteObject> {
                   Icons.delete,
                 ),
                 onPressed: () {
-                  arCoreController.removeNode(nodeName: name);
+                  arCoreController.remove(name);
                   Navigator.pop(context);
                 })
           ],

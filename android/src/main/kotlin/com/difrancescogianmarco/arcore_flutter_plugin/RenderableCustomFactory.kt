@@ -21,14 +21,17 @@ class RenderableCustomFactory {
         val TAG = RenderableCustomFactory::class.java.name
         fun makeRenderable(context: Context, flutterArCoreNode: FlutterArCoreNode, handler: RenderableHandler) {
 
-            if (flutterArCoreNode.dartType == "ArCoreReferenceNode") {
-                makeReferenceRenderable(context, flutterArCoreNode, handler)
-            } else if (flutterArCoreNode.shape?.dartType == "ARCoreImageView") {
-                makeImageViewRenderable(context, flutterArCoreNode.shape, handler)
-            } else if (flutterArCoreNode.shape?.dartType == "ARCoreVideoView") {
-                makeVideoRenderable(context, flutterArCoreNode, handler)
-            } else {
-                makePrimitiveShapeRenderable(context, flutterArCoreNode, handler)
+            when {
+                flutterArCoreNode.dartType == "ARToolKitObjectNode" ||
+                        flutterArCoreNode.dartType == "ArCoreReferenceNode" -> {
+                    makeReferenceRenderable(context, flutterArCoreNode, handler)
+                }
+                flutterArCoreNode.shape?.dartType == "ARToolKitPlane" -> {
+                    makeImageViewRenderable(context, flutterArCoreNode.shape, handler)
+                }
+                else -> {
+                    makePrimitiveShapeRenderable(context, flutterArCoreNode, handler)
+                }
             }
         }
 
@@ -38,26 +41,24 @@ class RenderableCustomFactory {
             val localObject = flutterArCoreNode.obcject3DFileName
 
             if (localObject != null) {
-                val builder = ModelRenderable.builder()
-                builder.setSource(context, Uri.parse(localObject))
-                builder.build().thenAccept { renderable ->
-                    handler(renderable, null)
-                }.exceptionally { throwable ->
-                    Log.e(TAG, "Unable to load Renderable.", throwable);
-                    handler(null, throwable)
-                    return@exceptionally null
-                }
+                ModelRenderable.builder().setSource(context, Uri.parse(localObject))
+                        .build().thenAccept { renderable ->
+                            handler(renderable, null)
+                        }.exceptionally { throwable ->
+                            Log.e(TAG, "Unable to load Renderable.", throwable)
+                            handler(null, throwable)
+                            return@exceptionally null
+                        }
             } else if (url != null) {
-                val modelRenderableBuilder = ModelRenderable.builder()
-                val renderableSourceBuilder = RenderableSource.builder()
 
-                renderableSourceBuilder
+                val renderableSourceBuilder = RenderableSource.builder()
                         .setSource(context, Uri.parse(url), RenderableSource.SourceType.GLTF2)
-                        .setScale(0.5f)
+                        .setScale(0.05f)
                         .setRecenterMode(RenderableSource.RecenterMode.ROOT)
 
-                modelRenderableBuilder
+                ModelRenderable.builder()
                         .setSource(context, renderableSourceBuilder.build())
+//                        .setSource(context) { FileInputStream(File(url)) }
                         .setRegistryId(url)
                         .build()
                         .thenAccept { renderable ->
@@ -72,7 +73,20 @@ class RenderableCustomFactory {
         }
 
         private fun makeImageViewRenderable(context: Context, shape: FlutterArCoreShape, handler: RenderableHandler) {
-            val bytes = shape.materials.first().textureBytes ?: return
+
+            val bytes = shape.materials.first().textureBytes
+            val imagePath = shape.materials.first().imagePath
+
+            val image = when {
+                (bytes != null) -> {
+                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                }
+                (imagePath != null) -> {
+                    BitmapFactory.decodeFile(imagePath)
+                }
+                else -> null
+            } ?: return
+
             var sizer: ViewSizer? = null
             (shape.params["side"] as? String)?.let {
                 val size = (shape.params["size"] as? Number ?: 1.0).toFloat()
@@ -81,28 +95,17 @@ class RenderableCustomFactory {
                     "FixedSide.HEIGHT" -> sizer = FixedHeightViewSizer(size)
                 }
             }
-            val image = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
 
             val imageView = ImageView(context)
             imageView.setImageBitmap(image)
-            val fr = ViewRenderable
-                    .builder()
+            val builder = ViewRenderable.builder()
                     .setView(context, imageView)
             if (sizer != null) {
-                fr.setSizer(sizer)
+                builder.setSizer(sizer)
             }
-            fr.build()
+            builder.build()
                     .thenAccept {
                         it.verticalAlignment = ViewRenderable.VerticalAlignment.CENTER
-                        handler(it, null)
-                    }
-        }
-
-        private fun makeVideoRenderable(context: Context, flutterArCoreNode: FlutterArCoreNode, handler: RenderableHandler) {
-            ModelRenderable.builder()
-                    .setSource(context, R.raw.chroma_key_video)
-                    .build()
-                    .thenAccept {
                         handler(it, null)
                     }
         }
@@ -124,21 +127,37 @@ class RenderableCustomFactory {
         }
 
         private fun makeMaterial(context: Context, flutterArCoreNode: FlutterArCoreNode, handler: MaterialHandler) {
-//            val texture = flutterArCoreNode.shape?.materials?.first()?.texture
+            val imagePath = flutterArCoreNode.shape?.materials?.first()?.imagePath
+            val imageUrl = flutterArCoreNode.shape?.materials?.first()?.imageUrl
             val textureBytes = flutterArCoreNode.shape?.materials?.first()?.textureBytes
             val color = flutterArCoreNode.shape?.materials?.first()?.color
-            if (textureBytes != null) {
-//                val isPng = texture.endsWith("png")
-                val isPng = true
 
-                val builder = com.google.ar.sceneform.rendering.Texture.builder();
-//                builder.setSource(context, Uri.parse(texture))
-                builder.setSource(BitmapFactory.decodeByteArray(textureBytes, 0, textureBytes.size))
+            if (textureBytes != null || imagePath != null || imageUrl != null) {
+                var isPng = true
+
+                val builder = Texture.builder()
+                when {
+                    textureBytes != null -> {
+                        val bitmap = BitmapFactory.decodeByteArray(textureBytes, 0, textureBytes.size)
+                                ?: return
+                        builder.setSource(bitmap)
+                    }
+                    imagePath != null -> {
+                        val bitmap = BitmapFactory.decodeFile(imagePath) ?: return
+                        builder.setSource(bitmap)
+                        isPng = imagePath.endsWith("png")
+                    }
+                    imageUrl != null -> {
+                        builder.setSource(context, Uri.parse(imageUrl))
+                        isPng = imageUrl.endsWith("png")
+                    }
+                }
+
                 builder.build().thenAccept { texture ->
                     MaterialCustomFactory.makeWithTexture(context, texture, isPng, flutterArCoreNode.shape.materials[0])?.thenAccept { material ->
                         handler(material, null)
                     }?.exceptionally { throwable ->
-                        Log.i(TAG, "texture error ${throwable}")
+                        Log.i(TAG, "texture error $throwable")
                         handler(null, throwable)
                         return@exceptionally null
                     }
@@ -148,7 +167,7 @@ class RenderableCustomFactory {
                         ?.thenAccept { material: Material ->
                             handler(material, null)
                         }?.exceptionally { throwable ->
-                            Log.i(TAG, "material error ${throwable}")
+                            Log.i(TAG, "material error $throwable")
                             handler(null, throwable)
                             return@exceptionally null
                         }

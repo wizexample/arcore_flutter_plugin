@@ -14,13 +14,28 @@ class NodeFactory {
 
         fun makeNode(context: Context, flutterNode: FlutterArCoreNode, handler: NodeHandler) {
             Log.i(TAG, flutterNode.toString())
-            val node = flutterNode.buildNode()
-            RenderableCustomFactory.makeRenderable(context, flutterNode) { renderable, t ->
-                if (renderable != null) {
-                    node.renderable = renderable
-                    handler(node, null)
-                }else{
-                    handler(null,t)
+            when {
+
+                (flutterNode.dartType == "ARToolKitVideoNode") -> {
+                    flutterNode.shape?.materials?.first()?.let { material ->
+                        material.videoPath?.let { videoPath ->
+                            // creates video node after confirming material and videoPath are not null.
+                            val node = VideoNode(context, flutterNode, material, videoPath)
+                            handler(node, null)
+                        }
+                    }
+                }
+                else -> {
+                    // picture, or primitive shape
+                    val node = flutterNode.buildNode()
+                    RenderableCustomFactory.makeRenderable(context, flutterNode) { renderable, t ->
+                        if (renderable != null) {
+                            node.renderable = renderable
+                            handler(node, null)
+                        } else {
+                            handler(null, t)
+                        }
+                    }
                 }
             }
         }

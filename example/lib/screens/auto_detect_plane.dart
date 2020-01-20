@@ -33,7 +33,7 @@ class _AutoDetectPlaneState extends State<AutoDetectPlane> {
 
   void _handleOnPlaneDetected(ARCorePlane plane) {
     if (node != null) {
-      arCoreController.removeNode(nodeName: node.name);
+      arCoreController.remove(node.name);
     }
     _addSphere(arCoreController, plane);
   }
@@ -41,18 +41,20 @@ class _AutoDetectPlaneState extends State<AutoDetectPlane> {
   Future _addSphere(ArCoreController controller, ARCorePlane plane) async {
     final ByteData textureBytes = await rootBundle.load('assets/earth.jpg');
 
-    final material = ArCoreMaterial(
-        color: Color.fromARGB(120, 66, 134, 244),
-        textureBytes: textureBytes.buffer.asUint8List());
-    final sphere = ArCoreSphere(
+    final material = ARToolKitMaterial(
+      diffuse: ARToolKitMaterialProperty(
+          color: Color.fromARGB(120, 66, 134, 244),
+          pixelData: PixelData(textureBytes.buffer.asUint8List())),
+    );
+    final sphere = ARToolKitSphere(
       materials: [material],
       radius: 0.1,
     );
     node = ArCoreNode(
-        shape: sphere,
+        geometry: sphere,
         position: plane.centerPose.translation,
         rotation: plane.centerPose.rotation);
-    controller.addArCoreNodeWithAnchor(node);
+    controller.add(node);
   }
 
   @override

@@ -9,12 +9,16 @@ class FlutterArCorePose(val translation: FloatArray, val rotation: FloatArray) {
         return map
     }
 
-    private fun convertFloatArray(array: FloatArray): DoubleArray {
-        val doubleArray = DoubleArray(array.size)
+    private fun convertFloatArray(array: FloatArray): String {
+        val sb = StringBuilder()
+
         for ((i, a) in array.withIndex()) {
-            doubleArray[i] = a.toDouble()
+            sb.append(a)
+            if (i < array.size - 1) {
+                sb.append(" ")
+            }
         }
-        return doubleArray
+        return sb.toString()
     }
 
 }

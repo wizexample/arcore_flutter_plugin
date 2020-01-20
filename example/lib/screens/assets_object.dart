@@ -48,12 +48,12 @@ class _AssetsObjectState extends State<AssetsObject> {
     if (objectSelected != null) {
       //"https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Duck/glTF/Duck.gltf"
       final toucanoNode = ArCoreReferenceNode(
-          name: objectSelected,
-          obcject3DFileName: objectSelected,
-          position: plane.pose.translation,
-          rotation: plane.pose.rotation);
+        name: objectSelected,
+        url: objectSelected,
+        position: plane.pose.translation,
+      );
 
-      arCoreController.addArCoreNodeWithAnchor(toucanoNode);
+      arCoreController.add(toucanoNode);
     } else {
       showDialog<void>(
         context: context,
@@ -81,7 +81,7 @@ class _AssetsObjectState extends State<AssetsObject> {
                   Icons.delete,
                 ),
                 onPressed: () {
-                  arCoreController.removeNode(nodeName: name);
+                  arCoreController.remove(name);
                   Navigator.pop(context);
                 })
           ],

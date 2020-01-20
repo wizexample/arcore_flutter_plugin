@@ -61,18 +61,20 @@ class _RuntimeMaterialsState extends State<RuntimeMaterials> {
   }
 
   void _addSphere(ArCoreController controller) {
-    final material = ArCoreMaterial(
-      color: Colors.yellow,
+    final material = ARToolKitMaterial(
+      diffuse: ARToolKitMaterialProperty(
+        color: Colors.yellow,
+      ),
     );
-    final sphere = ArCoreSphere(
+    final sphere = ARToolKitSphere(
       materials: [material],
       radius: 0.1,
     );
     sphereNode = ArCoreNode(
-      shape: sphere,
+      geometry: sphere,
       position: vector.Vector3(0, 0, -1.5),
     );
-    controller.addArCoreNode(sphereNode);
+    controller.add(sphereNode);
   }
 
   onColorChange(Color newColor) {
@@ -109,13 +111,12 @@ class _RuntimeMaterialsState extends State<RuntimeMaterials> {
       return;
     }
     debugPrint("updateMaterials sphere node not null");
-    final material = ArCoreMaterial(
-      color: color,
-      metallic: metallic,
-      roughness: roughness,
-      reflectance: reflectance,
+    final material = ARToolKitMaterial(
+      diffuse: ARToolKitMaterialProperty(
+        color: color,
+      ),
     );
-    sphereNode.shape.materials.value = [material];
+    sphereNode.geometry.materials.value = [material];
   }
 
   @override

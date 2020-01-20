@@ -15,13 +15,14 @@ import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCo
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCorePose
 import com.difrancescogianmarco.arcore_flutter_plugin.models.ARReferenceImage
-import com.difrancescogianmarco.arcore_flutter_plugin.models.RotatingNode
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.ArCoreUtils
+import com.difrancescogianmarco.arcore_flutter_plugin.utils.DecodableUtils
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.UnavailableException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 import com.google.ar.sceneform.*
+import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.rendering.ExternalTexture
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.rendering.Texture
@@ -42,6 +43,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private var mUserRequestedInstall = true
     private val TAG: String = ArCoreView::class.java.name
     private var arSceneView: ArSceneView? = null
+    private val objectsParent = Node()
     private val gestureDetector: GestureDetector
     private val RC_PERMISSIONS = 0x123
     private var sceneUpdateListener: Scene.OnUpdateListener
@@ -103,16 +105,16 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
                 val pose = augmentedImage.centerPose
                 val map: HashMap<String, Any> = HashMap()
-                map["tracking"] = augmentedImage.trackingState.name
+                map["visible"] = if (augmentedImage.trackingState == TrackingState.TRACKING) "true" else "false"
                 map["centerPose"] = FlutterArCorePose(pose.translation, pose.rotationQuaternion).toHashMap()
                 map["extentX"] = augmentedImage.extentX
                 map["extentZ"] = augmentedImage.extentZ
-                map["name"] = augmentedImage.name
+                map["nodeName"] = augmentedImage.name
                 if (augmentedImage.trackingState == TrackingState.TRACKING) {
                     if (!augmentedImageMap.containsKey(augmentedImage)) {
                         val node = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
                         node.name = augmentedImage.name
-                        arSceneView?.scene?.addChild(node)
+                        objectsParent.addChild(node)
                         augmentedImageMap.put(augmentedImage, node)
                         methodChannel.invokeMethod("didAddNodeForAnchor", map)
 
@@ -194,7 +196,10 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        println("onMethodCall: ${call.method}, ${call.arguments}")
+        val method = call.method
+        val args = call.arguments as? Map<*, *>
+        println("onMethodCall $method $args")
+
         when (call.method) {
             "init" -> {
                 arScenViewInit(call, result, activity)
@@ -213,27 +218,30 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 println("□■□■ addArCoreNodeWithAnchor: ${flutterNode.shape?.dartType}")
                 addNodeWithAnchor(flutterNode, result)
             }
+            "addNode" -> {
+                onAddNode(args, result)
+            }
             "removeARCoreNode" -> {
-                Log.i(TAG, " removeARCoreNode")
-                val map = call.arguments as HashMap<String, Any>
-                removeNode(map["nodeName"] as String, result)
+                removeNode(args, result)
             }
             "positionChanged" -> {
-                Log.i(TAG, " positionChanged")
-
+                updatePosition(args, result)
             }
             "rotationChanged" -> {
-                Log.i(TAG, " rotationChanged")
-                updateRotation(call, result)
-
+                updateRotation(args, result)
             }
-            "visibilityChanged" -> {
-                updateVisibility(call, result)
+            "eulerAnglesChanged" -> {
+                updateEulerAngles(args, result)
+            }
+            "scaleChanged" -> {
+                updateScale(args, result)
+            }
+            "isHiddenChanged" -> {
+                updateVisibility(args, result)
             }
             "updateMaterials" -> {
                 Log.i(TAG, " updateMaterials")
                 updateMaterials(call, result)
-
             }
             "loadMesh" -> {
                 val map = call.arguments as HashMap<String, Any>
@@ -264,25 +272,6 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             }
         }
     }
-
-/*    fun maybeEnableArButton() {
-        Log.i(TAG,"maybeEnableArButton" )
-        try{
-            val availability = ArCoreApk.getInstance().checkAvailability(activity.applicationContext)
-            if (availability.isTransient) {
-                // Re-query at 5Hz while compatibility is checked in the background.
-                Handler().postDelayed({ maybeEnableArButton() }, 200)
-            }
-            if (availability.isSupported) {
-                Log.i(TAG, "AR SUPPORTED")
-            } else { // Unsupported or unknown.
-                Log.i(TAG, "AR NOT SUPPORTED")
-            }
-        }catch (ex:Exception){
-            Log.i(TAG,"maybeEnableArButton ${ex.localizedMessage}" )
-        }
-
-    }*/
 
     private fun setupLifeCycle(context: Context) {
         activityLifecycleCallbacks = object : Application.ActivityLifecycleCallbacks {
@@ -437,46 +426,89 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         result?.success(null)
     }
 
-    fun attachNodeToParent(node: Node?, parentNodeName: String?) {
-        if (parentNodeName != null) {
-            Log.i(TAG, parentNodeName);
-            val parentNode: Node? = arSceneView?.scene?.findByName(parentNodeName)
-            parentNode?.addChild(node)
-        } else {
-            Log.i(TAG, "addNodeToSceneWithGeometry: NOT PARENT_NODE_NAME")
-            arSceneView?.scene?.addChild(node)
+    private fun onAddNode(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            addNode(FlutterArCoreNode(map))
         }
+        result.success(null)
     }
 
-    fun removeNode(name: String, result: MethodChannel.Result) {
-        val node = arSceneView?.scene?.findByName(name)
-        if (node != null) {
-            arSceneView?.scene?.removeChild(node);
-            Log.i(TAG, "removed ${node.name}")
+    private fun removeNode(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            (map["nodeName"] as? String)?.let { name ->
+                objectsParent.findByName(name)?.let { node ->
+                    objectsParent.removeChild(node)
+                }
+            }
         }
 
         result.success(null)
     }
 
-    fun updateRotation(call: MethodCall, result: MethodChannel.Result) {
-        val name = call.argument<String>("name")
-        val node = arSceneView?.scene?.findByName(name) as RotatingNode
-        Log.i(TAG, "rotating node:  $node")
-        val degreesPerSecond = call.argument<Double?>("degreesPerSecond")
-        Log.i(TAG, "rotating value:  $degreesPerSecond")
-        if (degreesPerSecond != null) {
-            Log.i(TAG, "rotating value:  ${node.degreesPerSecond}")
-            node.degreesPerSecond = degreesPerSecond.toFloat()
+    private fun updatePosition(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            (map["name"] as? String)?.let { name ->
+                objectsParent.findByName(name)?.let { node ->
+                    node.localPosition = DecodableUtils.parseVector3(map)
+                }
+            }
         }
         result.success(null)
     }
 
-    fun updateVisibility(call: MethodCall, result: MethodChannel.Result) {
-        val name = call.argument<String>("name")
-        val node = arSceneView?.scene?.findByName(name) ?: return
-        val visibility = call.argument<Boolean>("visibility") ?: false
-        node.isEnabled = visibility
+    private fun updateRotation(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            (map["name"] as? String)?.let { name ->
+                objectsParent.findByName(name)?.let { node ->
+                    node.localRotation = DecodableUtils.parseQuaternion(map)
+                }
+            }
+        }
+        result.success(null)
     }
+
+    private fun updateEulerAngles(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            (map["name"] as? String)?.let { name ->
+                objectsParent.findByName(name)?.let { node ->
+                    node.localRotation = Quaternion.eulerAngles(DecodableUtils.parseVector3(map))
+                }
+            }
+        }
+        result.success(null)
+    }
+
+    private fun updateScale(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            (map["name"] as? String)?.let { name ->
+                objectsParent.findByName(name)?.let { node ->
+                    node.localScale = DecodableUtils.parseVector3(map)
+                }
+            }
+        }
+        result.success(null)
+    }
+
+    private fun updateVisibility(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            (map["name"] as? String)?.let { name ->
+                objectsParent.findByName(name)?.let { node ->
+                    val isEnabled = !((map["isHidden"] as? Boolean) ?: true)
+                    node.isEnabled = isEnabled
+                    if (node is VideoNode) {
+                        if (!isEnabled) {
+                            node.video.player.pause()
+                        } else if (!node.video.player.isPlaying) {
+                            node.video.player.start()
+                        }
+                    }
+                }
+            }
+        }
+
+        result.success(0)
+    }
+
 
     fun updateMaterials(call: MethodCall, result: MethodChannel.Result) {
         val name = call.argument<String>("name")
@@ -591,6 +623,28 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         config.augmentedImageDatabase = database
         augmentedImageParams.clear()
         augmentedImageDatabase = database
+    }
+
+    private fun addNode(flutterArCoreNode: FlutterArCoreNode) {
+
+        NodeFactory.makeNode(activity.applicationContext, flutterArCoreNode) { node, _ ->
+            if (node != null) {
+                attachNodeToParent(node, flutterArCoreNode.parentNodeName)
+                for (n in flutterArCoreNode.children) {
+                    n.parentNodeName = flutterArCoreNode.name
+                    addNode(n)
+                }
+            }
+        }
+    }
+
+    private fun attachNodeToParent(node: Node?, parentNodeName: String?) {
+        if (parentNodeName != null) {
+            val parentNode: Node? = objectsParent.findByName(parentNodeName)
+            parentNode?.addChild(node)
+        } else {
+            objectsParent.addChild(node)
+        }
     }
 
     /* private fun tryPlaceNode(tap: MotionEvent?, frame: Frame) {

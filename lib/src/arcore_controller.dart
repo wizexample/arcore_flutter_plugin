@@ -1,11 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:arcore_flutter_plugin/src/arcore_anchor.dart';
-import 'package:arcore_flutter_plugin/src/arcore_rotating_node.dart';
-import 'package:arcore_flutter_plugin/src/arcore_video_node.dart';
+import 'package:arcore_flutter_plugin/src/geometries/artoolkit_box.dart';
+import 'package:arcore_flutter_plugin/src/geometries/artoolkit_cylinder.dart';
+import 'package:arcore_flutter_plugin/src/geometries/artoolkit_plane.dart';
+import 'package:arcore_flutter_plugin/src/geometries/artoolkit_sphere.dart';
 import 'package:arcore_flutter_plugin/src/utils/vector_utils.dart';
 import 'package:flutter/services.dart';
-import 'package:meta/meta.dart';
 
 import 'arcore_hit_test_result.dart';
 import 'arcore_node.dart';
@@ -98,26 +99,17 @@ class ArCoreController {
     return Future.value();
   }
 
-  Future<void> addArCoreNode(ArCoreNode node, {String parentNodeName}) {
+  Future<void> add(ArCoreNode node, {String parentNodeName}) {
     assert(node != null);
     final params = _addParentNodeNameToParams(node.toMap(), parentNodeName);
-    print(params.toString());
-    _addListeners(node);
-    return _channel.invokeMethod('addArCoreNode', params);
+    // print("######### ${node.toMap()}");
+    _subsribeToChanges(node);
+    return _channel.invokeMethod('addNode', params);
   }
 
-  Future<void> addArCoreNodeWithAnchor(ArCoreNode node,
-      {String parentNodeName}) {
-    assert(node != null);
-    final params = _addParentNodeNameToParams(node.toMap(), parentNodeName);
-    print(params.toString());
-    _addListeners(node);
-    return _channel.invokeMethod('addArCoreNodeWithAnchor', params);
-  }
-
-  Future<void> removeNode({@required String nodeName}) {
+  Future<void> remove(String nodeName) {
     assert(nodeName != null);
-    return _channel.invokeMethod('removeARCoreNode', {'nodeName': nodeName});
+    return _channel.invokeMethod('removeARToolKitNode', {'nodeName': nodeName});
   }
 
   void addImageRunWithConfigAndImage(Uint8List bytes, int lengthInBytes,
@@ -142,16 +134,30 @@ class ArCoreController {
     return geometryMap;
   }
 
-  void _addListeners(ArCoreNode node) {
+  void _subsribeToChanges(ArCoreNode node) {
     node.position.addListener(() => _handlePositionChanged(node));
-    node?.shape?.materials?.addListener(() => _updateMaterials(node));
-    node.isHidden.addListener(() => _handleVisibilityChanged(node));
+    node.rotation.addListener(() => _handleRotationChanged(node));
+    node.eulerAngles.addListener(() => _handleEulerAnglesChanged(node));
+    node.scale.addListener(() => _handleScaleChanged(node));
 
-    if (node is ArCoreRotatingNode) {
-      node.degreesPerSecond.addListener(() => _handleRotationChanged(node));
-    }
-    if (node is ARCoreVideoNode) {
-      // todo handling onPlay / onPause
+    node.isHidden.addListener(() => _handleIsHiddenChanged(node));
+
+    if (node.geometry != null) {
+      node.geometry.materials.addListener(() => _updateMaterials(node));
+      switch (node.geometry.runtimeType) {
+        case ARToolKitPlane:
+          _subscribeToPlaneGeometry(node);
+          break;
+        case ARToolKitSphere:
+          _subscribeToSphereGeometry(node);
+          break;
+        case ARToolKitBox:
+          _subscribeToBoxGeometry(node);
+          break;
+        case ARToolKitCylinder:
+          _subscribeToCylinderGeometry(node);
+          break;
+      }
     }
   }
 
@@ -160,19 +166,72 @@ class ArCoreController {
         _getHandlerParams(node, convertVector3ToMap(node.position.value)));
   }
 
-  void _handleRotationChanged(ArCoreRotatingNode node) {
+  void _handleRotationChanged(ArCoreNode node) {
     _channel.invokeMethod<void>('rotationChanged',
-        {'name': node.name, 'degreesPerSecond': node.degreesPerSecond.value});
+        _getHandlerParams(node, convertVector4ToMap(node.rotation.value)));
   }
 
-  void _handleVisibilityChanged(ArCoreRotatingNode node) {
-    _channel.invokeMethod<void>('visibilityChanged',
-        {'name': node.name, 'visibility': !node.isHidden.value});
+  void _handleEulerAnglesChanged(ArCoreNode node) {
+    _channel.invokeMethod<void>('eulerAnglesChanged',
+        _getHandlerParams(node, convertVector3ToMap(node.eulerAngles.value)));
+  }
+
+  void _handleScaleChanged(ArCoreNode node) {
+    _channel.invokeMethod<void>('scaleChanged',
+        _getHandlerParams(node, convertVector3ToMap(node.scale.value)));
+  }
+
+  void _handleIsHiddenChanged(ArCoreNode node) {
+    _channel.invokeMethod<void>('isHiddenChanged',
+        _getHandlerParams(node, {'isHidden': node.isHidden.value}));
   }
 
   void _updateMaterials(ArCoreNode node) {
     _channel.invokeMethod<void>(
-        'updateMaterials', _getHandlerParams(node, node.shape.toMap()));
+        'updateMaterials', _getHandlerParams(node, node.geometry.toMap()));
+  }
+
+  void _subscribeToCylinderGeometry(ArCoreNode node) {
+    final ARToolKitCylinder cylinder = node.geometry;
+    cylinder.radius.addListener(() => _updateSingleProperty(
+        node, 'radius', cylinder.radius.value, 'geometry'));
+    cylinder.height.addListener(() => _updateSingleProperty(
+        node, 'height', cylinder.height.value, 'geometry'));
+  }
+
+  void _subscribeToBoxGeometry(ArCoreNode node) {
+    final ARToolKitBox box = node.geometry;
+    box.width.addListener(() =>
+        _updateSingleProperty(node, 'width', box.width.value, 'geometry'));
+    box.height.addListener(() =>
+        _updateSingleProperty(node, 'height', box.height.value, 'geometry'));
+    box.length.addListener(() =>
+        _updateSingleProperty(node, 'length', box.length.value, 'geometry'));
+  }
+
+  void _subscribeToSphereGeometry(ArCoreNode node) {
+    final ARToolKitSphere sphere = node.geometry;
+    sphere.radius.addListener(() =>
+        _updateSingleProperty(node, 'radius', sphere.radius.value, 'geometry'));
+  }
+
+  void _subscribeToPlaneGeometry(ArCoreNode node) {
+    final ARToolKitPlane plane = node.geometry;
+    plane.width.addListener(() =>
+        _updateSingleProperty(node, 'width', plane.width.value, 'geometry'));
+    plane.height.addListener(() =>
+        _updateSingleProperty(node, 'height', plane.height.value, 'geometry'));
+  }
+
+  void _updateSingleProperty(
+      ArCoreNode node, String propertyName, dynamic value, String keyProperty) {
+    _channel.invokeMethod<void>(
+        'updateSingleProperty',
+        _getHandlerParams(node, <String, dynamic>{
+          'propertyName': propertyName,
+          'propertyValue': value,
+          'keyProperty': keyProperty,
+        }));
   }
 
   Map<String, dynamic> _getHandlerParams(

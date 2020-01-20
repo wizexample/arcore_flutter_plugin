@@ -38,68 +38,76 @@ class _HelloWorldState extends State<HelloWorld> {
   Future _addImageView(ArCoreController controller) async {
     final ByteData textureBytes = await rootBundle.load('assets/arTarget1.jpg');
 
-    final view = ARCoreImageView(
-        imageBytes: textureBytes.buffer.asUint8List(),
-        fixedSide: FixedSide.HEIGHT,
-        size: 0.3);
+    final materials = ARToolKitMaterial(
+      diffuse: ARToolKitMaterialProperty(
+          color: Color.fromARGB(120, 66, 134, 244),
+          pixelData: PixelData(textureBytes.buffer.asUint8List())),
+    );
+    final view = ARToolKitPlane(
+      materials: [materials],
+    );
 
     final node = ArCoreNode(
       name: 'img',
-      shape: view,
+      geometry: view,
       position: vector.Vector3(0, 0, 0),
     );
-    controller.addArCoreNode(node);
+    controller.add(node);
   }
 
   Future _addSphere(ArCoreController controller) async {
 //    final ByteData textureBytes = await rootBundle.load('assets/earth.jpg');
 
-    final material = ArCoreMaterial(
-      color: Color.fromARGB(0xFF, 0xFF, 0xff, 0xFf),
+    final material = ARToolKitMaterial(
+      diffuse: ARToolKitMaterialProperty(
+        color: Color.fromARGB(0xFF, 0xFF, 0xff, 0xFf),
+      ),
 //        textureBytes: textureBytes.buffer.asUint8List()
     );
-    final sphere = ArCoreSphere(
+    final sphere = ARToolKitSphere(
       materials: [material],
       radius: 0.05,
     );
     final node = ArCoreNode(
-      shape: sphere,
+      geometry: sphere,
       position: vector.Vector3(0, 0, -0),
     );
-    controller.addArCoreNode(node);
+    controller.add(node);
   }
 
   void _addCylindre(ArCoreController controller) {
-    final material = ArCoreMaterial(
+    final material = ARToolKitMaterial(
+        diffuse: ARToolKitMaterialProperty(
       color: Colors.red,
-      reflectance: 1.0,
-    );
-    final cylindre = ArCoreCylinder(
+    ));
+    final cylindre = ARToolKitCylinder(
       materials: [material],
       radius: 0.5,
       height: 0.3,
     );
     final node = ArCoreNode(
-      shape: cylindre,
+      geometry: cylindre,
       position: vector.Vector3(0.0, -0.5, -2.0),
     );
-    controller.addArCoreNode(node);
+    controller.add(node);
   }
 
   void _addCube(ArCoreController controller) {
-    final material = ArCoreMaterial(
+    final material = ARToolKitMaterial(
+        diffuse: ARToolKitMaterialProperty(
       color: Color.fromARGB(120, 66, 134, 244),
-      metallic: 1.0,
-    );
-    final cube = ArCoreCube(
+    ));
+    final cube = ARToolKitBox(
       materials: [material],
-      size: vector.Vector3(0.5, 0.5, 0.5),
+      width: 0.5,
+      height: 0.5,
+      length: 0.5,
     );
     final node = ArCoreNode(
-      shape: cube,
+      geometry: cube,
       position: vector.Vector3(-0.5, 0.5, -3.5),
     );
-    controller.addArCoreNode(node);
+    controller.add(node);
   }
 
   @override
