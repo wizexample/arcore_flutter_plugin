@@ -41,6 +41,13 @@ class ArCoreController {
   ArCoreImageHandler onImageDetected;
   ArCoreImageHandler onAddNodeForAnchor;
 
+  static const MethodChannel _prepareMethodChannel =
+      MethodChannel('arcore_prepare_plugin');
+
+  static Future<bool> isSupported() async {
+    return await _prepareMethodChannel.invokeMethod('isSupported');
+  }
+
   init() async {
     try {
       await _channel.invokeMethod<void>('init', {
