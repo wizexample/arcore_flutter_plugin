@@ -64,6 +64,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     init {
         methodChannel.setMethodCallHandler(this)
         arSceneView = ArSceneView(context)
+        arSceneView?.scene?.addChild(objectsParent)
+
         // Set up a tap gesture detector.
         gestureDetector = GestureDetector(
                 context,
@@ -91,6 +93,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
                 val pose = plane.centerPose
                 val map: HashMap<String, Any> = HashMap()
+                map["visible"] = if (plane.trackingState == TrackingState.TRACKING) "true" else "false"
                 map["tracking"] = plane.trackingState.name
                 map["type"] = plane.type.ordinal
                 map["centerPose"] = FlutterArCorePose(pose.translation, pose.rotationQuaternion).toHashMap()
@@ -106,6 +109,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 val pose = augmentedImage.centerPose
                 val map: HashMap<String, Any> = HashMap()
                 map["visible"] = if (augmentedImage.trackingState == TrackingState.TRACKING) "true" else "false"
+                map["tracking"] = augmentedImage.trackingState.name
                 map["centerPose"] = FlutterArCorePose(pose.translation, pose.rotationQuaternion).toHashMap()
                 map["extentX"] = augmentedImage.extentX
                 map["extentZ"] = augmentedImage.extentZ
@@ -221,7 +225,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             "addNode" -> {
                 onAddNode(args, result)
             }
-            "removeARCoreNode" -> {
+            "removeARToolKitNode" -> {
                 removeNode(args, result)
             }
             "positionChanged" -> {
@@ -639,6 +643,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     private fun attachNodeToParent(node: Node?, parentNodeName: String?) {
+        println("□■□■ attachNodeToParent $node / $parentNodeName")
         if (parentNodeName != null) {
             val parentNode: Node? = objectsParent.findByName(parentNodeName)
             parentNode?.addChild(node)

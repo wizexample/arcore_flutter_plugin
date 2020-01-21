@@ -23,6 +23,7 @@ class ArCoreController {
     this.enableTapRecognizer,
     this.enableUpdateListener, //    @required this.onUnsupported,
   }) {
+    print('$id / $enableTapRecognizer / $enableUpdateListener');
     _channel = MethodChannel('arcore_flutter_plugin_$id');
     _channel.setMethodCallHandler(_handleMethodCalls);
     init();

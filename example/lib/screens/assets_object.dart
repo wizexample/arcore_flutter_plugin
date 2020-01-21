@@ -49,7 +49,7 @@ class _AssetsObjectState extends State<AssetsObject> {
       //"https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Duck/glTF/Duck.gltf"
       final toucanoNode = ArCoreReferenceNode(
         name: objectSelected,
-        url: objectSelected,
+        obcject3DFileName: objectSelected,
         position: plane.pose.translation,
       );
 
@@ -116,9 +116,9 @@ class _ListObjectSelectionState extends State<ListObjectSelection> {
 
   List<String> objectsFileName = [
     "halloween.sfb",
-    "toucan.sfb",
-    "andy.sfb",
-    "artic_fox.sfb"
+    "TocoToucan.sfb",
+    "Andy.sfb",
+    "ArcticFox_Posed.sfb"
   ];
 
   String selected;

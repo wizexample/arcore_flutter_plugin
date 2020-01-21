@@ -35,6 +35,8 @@ class ARCorePlane extends ARCoreAnchor {
   ARCorePlaneType type;
 
   ARCorePlane.fromMap(Map map) : super.fromMap(map) {
+    print('fromMap $map');
+    print(' ${map['type']}');
     this.type = ARCorePlaneType.values[map["type"] ?? 0];
   }
 }

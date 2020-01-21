@@ -16,7 +16,7 @@ class FlutterArCoreNode(map: Map<*, *>) {
     val renderingOrder = (map["renderingOrder"] as? Number)?.toInt() ?: 0
     val isHidden = map["isHidden"] as? Boolean ?: true
 
-    val objectUrl: String? = map["objectUrl"] as? String
+    val objectUrl: String? = map["objectUrl"] as? String ?: map["url"] as? String
     val obcject3DFileName: String? = map["obcject3DFileName"] as? String
             ?: map["localPath"] as? String
     val shape: FlutterArCoreShape? = getShape(map["geometry"] as? HashMap<*, *>)
