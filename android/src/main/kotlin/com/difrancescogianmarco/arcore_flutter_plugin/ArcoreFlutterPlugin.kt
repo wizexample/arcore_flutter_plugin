@@ -47,7 +47,7 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        println("$PREPARE onMethodCall: $call")
+        println("$PREPARE onMethodCall: ${call.method}")
         when (call.method) {
             "isSupported" -> {
                 val availability = ArCoreApk.getInstance().checkAvailability(context)
