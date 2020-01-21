@@ -9,7 +9,6 @@ import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.ExternalTexture
 import com.google.ar.sceneform.rendering.ModelRenderable
-import java.io.File
 import kotlin.math.min
 
 class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterArCoreMaterial,
@@ -26,7 +25,9 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
 
     init {
         video = videos.get(videoPath) ?: let {
-            val p = MediaPlayer.create(context, Uri.fromFile(File(videoPath)))
+            val uri = Uri.parse(videoPath)
+            println("uri: $uri")
+            val p = MediaPlayer.create(context, uri)
             p.isLooping = material.isLooping
             val ret = VideoTexture(p)
             videos[videoPath] = ret
