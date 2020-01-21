@@ -208,7 +208,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             "addNode" -> {
                 onAddNode(args, result)
             }
-            "removeARToolKitNode" -> {
+            "removeARCoreNode" -> {
                 removeNode(args, result)
             }
             "positionChanged" -> {

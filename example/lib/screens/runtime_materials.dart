@@ -61,12 +61,12 @@ class _RuntimeMaterialsState extends State<RuntimeMaterials> {
   }
 
   void _addSphere(ArCoreController controller) {
-    final material = ARToolKitMaterial(
-      diffuse: ARToolKitMaterialProperty(
+    final material = ARCoreMaterial(
+      diffuse: ARCoreMaterialProperty(
         color: Colors.yellow,
       ),
     );
-    final sphere = ARToolKitSphere(
+    final sphere = ARCoreSphere(
       materials: [material],
       radius: 0.1,
     );
@@ -111,8 +111,8 @@ class _RuntimeMaterialsState extends State<RuntimeMaterials> {
       return;
     }
     debugPrint("updateMaterials sphere node not null");
-    final material = ARToolKitMaterial(
-      diffuse: ARToolKitMaterialProperty(
+    final material = ARCoreMaterial(
+      diffuse: ARCoreMaterialProperty(
         color: color,
       ),
     );

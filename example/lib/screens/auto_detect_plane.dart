@@ -41,12 +41,12 @@ class _AutoDetectPlaneState extends State<AutoDetectPlane> {
   Future _addSphere(ArCoreController controller, ARCorePlane plane) async {
     final ByteData textureBytes = await rootBundle.load('assets/earth.jpg');
 
-    final material = ARToolKitMaterial(
-      diffuse: ARToolKitMaterialProperty(
+    final material = ARCoreMaterial(
+      diffuse: ARCoreMaterialProperty(
           color: Color.fromARGB(120, 66, 134, 244),
           pixelData: PixelData(textureBytes.buffer.asUint8List())),
     );
-    final sphere = ARToolKitSphere(
+    final sphere = ARCoreSphere(
       materials: [material],
       radius: 0.1,
     );

@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:arcore_flutter_plugin/src/arcore_anchor.dart';
-import 'package:arcore_flutter_plugin/src/geometries/artoolkit_box.dart';
-import 'package:arcore_flutter_plugin/src/geometries/artoolkit_cylinder.dart';
-import 'package:arcore_flutter_plugin/src/geometries/artoolkit_plane.dart';
-import 'package:arcore_flutter_plugin/src/geometries/artoolkit_sphere.dart';
+import 'package:arcore_flutter_plugin/src/geometries/arcore_box.dart';
+import 'package:arcore_flutter_plugin/src/geometries/arcore_cylinder.dart';
+import 'package:arcore_flutter_plugin/src/geometries/arcore_slate.dart';
+import 'package:arcore_flutter_plugin/src/geometries/arcore_sphere.dart';
 import 'package:arcore_flutter_plugin/src/utils/vector_utils.dart';
 import 'package:flutter/services.dart';
 
@@ -110,7 +110,7 @@ class ArCoreController {
 
   Future<void> remove(String nodeName) {
     assert(nodeName != null);
-    return _channel.invokeMethod('removeARToolKitNode', {'nodeName': nodeName});
+    return _channel.invokeMethod('removeARCoreNode', {'nodeName': nodeName});
   }
 
   void addImageRunWithConfigAndImage(Uint8List bytes, int lengthInBytes,
@@ -146,16 +146,16 @@ class ArCoreController {
     if (node.geometry != null) {
       node.geometry.materials.addListener(() => _updateMaterials(node));
       switch (node.geometry.runtimeType) {
-        case ARToolKitPlane:
+        case ARCoreSlate:
           _subscribeToPlaneGeometry(node);
           break;
-        case ARToolKitSphere:
+        case ARCoreSphere:
           _subscribeToSphereGeometry(node);
           break;
-        case ARToolKitBox:
+        case ARCoreBox:
           _subscribeToBoxGeometry(node);
           break;
-        case ARToolKitCylinder:
+        case ARCoreCylinder:
           _subscribeToCylinderGeometry(node);
           break;
       }
@@ -193,7 +193,7 @@ class ArCoreController {
   }
 
   void _subscribeToCylinderGeometry(ARCoreNode node) {
-    final ARToolKitCylinder cylinder = node.geometry;
+    final ARCoreCylinder cylinder = node.geometry;
     cylinder.radius.addListener(() => _updateSingleProperty(
         node, 'radius', cylinder.radius.value, 'geometry'));
     cylinder.height.addListener(() => _updateSingleProperty(
@@ -201,7 +201,7 @@ class ArCoreController {
   }
 
   void _subscribeToBoxGeometry(ARCoreNode node) {
-    final ARToolKitBox box = node.geometry;
+    final ARCoreBox box = node.geometry;
     box.width.addListener(() =>
         _updateSingleProperty(node, 'width', box.width.value, 'geometry'));
     box.height.addListener(() =>
@@ -211,13 +211,13 @@ class ArCoreController {
   }
 
   void _subscribeToSphereGeometry(ARCoreNode node) {
-    final ARToolKitSphere sphere = node.geometry;
+    final ARCoreSphere sphere = node.geometry;
     sphere.radius.addListener(() =>
         _updateSingleProperty(node, 'radius', sphere.radius.value, 'geometry'));
   }
 
   void _subscribeToPlaneGeometry(ARCoreNode node) {
-    final ARToolKitPlane plane = node.geometry;
+    final ARCoreSlate plane = node.geometry;
     plane.width.addListener(() =>
         _updateSingleProperty(node, 'width', plane.width.value, 'geometry'));
     plane.height.addListener(() =>

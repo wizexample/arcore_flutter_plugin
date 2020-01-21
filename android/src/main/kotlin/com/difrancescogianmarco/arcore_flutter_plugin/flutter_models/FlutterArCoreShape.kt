@@ -12,17 +12,17 @@ class FlutterArCoreShape(val params: HashMap<*, *>) {
 
     fun buildShape(material: Material): ModelRenderable? {
         return when (dartType) {
-            "ARToolKitSphere" -> {
+            "ARCoreSphere" -> {
                 val radius = (params["radius"] as? Number)?.toFloat() ?: 1.0f
                 ShapeFactory.makeSphere(radius, Vector3.zero(), material)
             }
-            "ARToolKitBox" -> {
+            "ARCoreBox" -> {
                 val width = (params["width"] as? Number)?.toFloat() ?: 1.0f
                 val height = (params["height"] as? Number)?.toFloat() ?: 1.0f
                 val length = (params["length"] as? Number)?.toFloat() ?: 1.0f
                 ShapeFactory.makeCube(Vector3(width, height, length), Vector3.zero(), material)
             }
-            "ARToolKitCylinder" -> {
+            "ARCoreCylinder" -> {
                 val radius = (params["radius"] as? Number)?.toFloat() ?: 1.0f
                 val height = (params["height"] as? Number)?.toFloat() ?: 1.0f
                 ShapeFactory.makeCylinder(radius, height, Vector3.zero(), material)

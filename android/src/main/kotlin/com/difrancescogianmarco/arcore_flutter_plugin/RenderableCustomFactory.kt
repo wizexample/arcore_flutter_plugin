@@ -22,11 +22,11 @@ class RenderableCustomFactory {
         fun makeRenderable(context: Context, flutterArCoreNode: FlutterArCoreNode, handler: RenderableHandler) {
 
             when {
-                flutterArCoreNode.dartType == "ARToolKitObjectNode" ||
+                flutterArCoreNode.dartType == "ARCoreObjectNode" ||
                         flutterArCoreNode.dartType == "ArCoreReferenceNode" -> {
                     makeReferenceRenderable(context, flutterArCoreNode, handler)
                 }
-                flutterArCoreNode.shape?.dartType == "ARToolKitPlane" -> {
+                flutterArCoreNode.shape?.dartType == "ARCoreSlate" -> {
                     makeImageViewRenderable(context, flutterArCoreNode.shape, handler)
                 }
                 else -> {

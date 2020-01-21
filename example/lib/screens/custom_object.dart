@@ -35,11 +35,11 @@ class _CustomObjectState extends State<CustomObject> {
   }
 
   Future _addSphere(ArCoreHitTestResult plane) async {
-    final moonMaterial = ARToolKitMaterial(
-      diffuse: ARToolKitMaterialProperty(color: Colors.grey),
+    final moonMaterial = ARCoreMaterial(
+      diffuse: ARCoreMaterialProperty(color: Colors.grey),
     );
 
-    final moonShape = ARToolKitSphere(
+    final moonShape = ARCoreSphere(
       materials: [moonMaterial],
       radius: 0.03,
     );
@@ -52,13 +52,13 @@ class _CustomObjectState extends State<CustomObject> {
 
     final ByteData textureBytes = await rootBundle.load('assets/earth.jpg');
 
-    final earthMaterial = ARToolKitMaterial(
-      diffuse: ARToolKitMaterialProperty(
+    final earthMaterial = ARCoreMaterial(
+      diffuse: ARCoreMaterialProperty(
           color: Color.fromARGB(120, 66, 134, 244),
           pixelData: PixelData(textureBytes.buffer.asUint8List())),
     );
 
-    final earthShape = ARToolKitSphere(
+    final earthShape = ARCoreSphere(
       materials: [earthMaterial],
       radius: 0.1,
     );

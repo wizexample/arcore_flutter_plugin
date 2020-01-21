@@ -1,4 +1,4 @@
-import 'package:arcore_flutter_plugin/src/geometries/artoolkit_geometry.dart';
+import 'package:arcore_flutter_plugin/src/geometries/arcore_geometry.dart';
 import 'package:arcore_flutter_plugin/src/utils/random_string.dart'
     as random_string;
 import 'package:arcore_flutter_plugin/src/utils/vector_utils.dart';
@@ -24,7 +24,7 @@ class ARCoreNode {
         rotation = ValueNotifier(rotation),
         eulerAngles = ValueNotifier(eulerAngles);
 
-  final ARToolKitGeometry geometry;
+  final ARCoreGeometry geometry;
   final ValueNotifier<bool> isHidden;
   final ValueNotifier<Vector3> position;
   final ValueNotifier<Vector3> scale;

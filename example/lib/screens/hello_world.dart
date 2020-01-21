@@ -38,12 +38,12 @@ class _HelloWorldState extends State<HelloWorld> {
   Future _addImageView(ArCoreController controller) async {
     final ByteData textureBytes = await rootBundle.load('assets/arTarget1.jpg');
 
-    final materials = ARToolKitMaterial(
-      diffuse: ARToolKitMaterialProperty(
+    final materials = ARCoreMaterial(
+      diffuse: ARCoreMaterialProperty(
           color: Color.fromARGB(120, 66, 134, 244),
           pixelData: PixelData(textureBytes.buffer.asUint8List())),
     );
-    final view = ARToolKitPlane(
+    final view = ARCoreSlate(
       materials: [materials],
     );
 
@@ -58,13 +58,13 @@ class _HelloWorldState extends State<HelloWorld> {
   Future _addSphere(ArCoreController controller) async {
 //    final ByteData textureBytes = await rootBundle.load('assets/earth.jpg');
 
-    final material = ARToolKitMaterial(
-      diffuse: ARToolKitMaterialProperty(
+    final material = ARCoreMaterial(
+      diffuse: ARCoreMaterialProperty(
         color: Color.fromARGB(0xFF, 0xFF, 0xff, 0xFf),
       ),
 //        textureBytes: textureBytes.buffer.asUint8List()
     );
-    final sphere = ARToolKitSphere(
+    final sphere = ARCoreSphere(
       materials: [material],
       radius: 0.05,
     );
@@ -76,11 +76,11 @@ class _HelloWorldState extends State<HelloWorld> {
   }
 
   void _addCylindre(ArCoreController controller) {
-    final material = ARToolKitMaterial(
-        diffuse: ARToolKitMaterialProperty(
+    final material = ARCoreMaterial(
+        diffuse: ARCoreMaterialProperty(
       color: Colors.red,
     ));
-    final cylindre = ARToolKitCylinder(
+    final cylindre = ARCoreCylinder(
       materials: [material],
       radius: 0.5,
       height: 0.3,
@@ -93,11 +93,11 @@ class _HelloWorldState extends State<HelloWorld> {
   }
 
   void _addCube(ArCoreController controller) {
-    final material = ARToolKitMaterial(
-        diffuse: ARToolKitMaterialProperty(
+    final material = ARCoreMaterial(
+        diffuse: ARCoreMaterialProperty(
       color: Color.fromARGB(120, 66, 134, 244),
     ));
-    final cube = ARToolKitBox(
+    final cube = ARCoreBox(
       materials: [material],
       width: 0.5,
       height: 0.5,
