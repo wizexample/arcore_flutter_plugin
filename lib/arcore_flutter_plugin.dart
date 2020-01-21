@@ -7,6 +7,7 @@ export 'package:arcore_flutter_plugin/src/arcore_material.dart';
 export 'package:arcore_flutter_plugin/src/arcore_node.dart';
 export 'package:arcore_flutter_plugin/src/arcore_pose.dart';
 export 'package:arcore_flutter_plugin/src/arcore_reference_node.dart';
+export 'package:arcore_flutter_plugin/src/arcore_video_node.dart';
 export 'package:arcore_flutter_plugin/src/arcore_view.dart';
 export 'package:arcore_flutter_plugin/src/geometries/artoolkit_box.dart';
 export 'package:arcore_flutter_plugin/src/geometries/artoolkit_cylinder.dart';
