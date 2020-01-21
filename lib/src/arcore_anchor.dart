@@ -51,6 +51,6 @@ class ARCoreMarker extends ARCoreAnchor {
   String name;
 
   ARCoreMarker.fromMap(Map map) : super.fromMap(map) {
-    this.name = map["name"];
+    this.name = map["markerName"];
   }
 }

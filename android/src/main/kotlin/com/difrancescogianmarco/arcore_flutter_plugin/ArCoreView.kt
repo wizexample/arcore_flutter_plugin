@@ -114,6 +114,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 map["extentX"] = augmentedImage.extentX
                 map["extentZ"] = augmentedImage.extentZ
                 map["nodeName"] = augmentedImage.name
+                map["markerName"] = augmentedImage.name
                 if (augmentedImage.trackingState == TrackingState.TRACKING) {
                     if (!augmentedImageMap.containsKey(augmentedImage)) {
                         val node = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
