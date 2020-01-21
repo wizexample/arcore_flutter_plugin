@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.graphics.BitmapFactory
-import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
 import android.view.GestureDetector
@@ -23,7 +22,6 @@ import com.google.ar.core.exceptions.UnavailableException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 import com.google.ar.sceneform.*
 import com.google.ar.sceneform.math.Quaternion
-import com.google.ar.sceneform.rendering.ExternalTexture
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.rendering.Texture
 import com.google.ar.sceneform.ux.AugmentedFaceNode
@@ -58,8 +56,6 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private var augmentedImageDatabase: AugmentedImageDatabase? = null
     private var isReady = false
     private val augmentedImageMap = HashMap<AugmentedImage, Node>()
-
-    private val mediaPlayers = ArrayList<MediaPlayer>()
 
     init {
         methodChannel.setMethodCallHandler(this)
@@ -209,20 +205,6 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             "init" -> {
                 arScenViewInit(call, result, activity)
             }
-            "addArCoreNode" -> {
-                Log.i(TAG, " addArCoreNode")
-                val map = call.arguments as HashMap<String, Any>
-                val flutterNode = FlutterArCoreNode(map)
-                println("□■□■ addArCoreNode: ${flutterNode.shape?.dartType}")
-                onAddNode(flutterNode, result)
-            }
-            "addArCoreNodeWithAnchor" -> {
-                Log.i(TAG, " addArCoreNode")
-                val map = call.arguments as HashMap<String, Any>
-                val flutterNode = FlutterArCoreNode(map)
-                println("□■□■ addArCoreNodeWithAnchor: ${flutterNode.shape?.dartType}")
-                addNodeWithAnchor(flutterNode, result)
-            }
             "addNode" -> {
                 onAddNode(args, result)
             }
@@ -365,70 +347,6 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             arSceneView?.scene?.addOnUpdateListener(sceneUpdateListener)
         }
         result.success(null)
-    }
-
-    fun addNodeWithAnchor(flutterArCoreNode: FlutterArCoreNode, result: MethodChannel.Result) {
-        if (arSceneView == null) {
-            return
-        }
-
-        RenderableCustomFactory.makeRenderable(activity.applicationContext, flutterArCoreNode) { renderable, t ->
-            if (renderable != null) {
-                val myAnchor = arSceneView?.session?.createAnchor(Pose(flutterArCoreNode.getPosition(), flutterArCoreNode.getRotation()))
-                if (myAnchor != null) {
-                    val anchorNode = AnchorNode(myAnchor)
-                    anchorNode.name = flutterArCoreNode.name
-                    anchorNode.renderable = renderable
-
-                    if (flutterArCoreNode.shape?.dartType == "ARCoreVideoView") {
-                        val texture = ExternalTexture()
-                        val mediaPlayer = MediaPlayer()
-                        mediaPlayer.setDataSource("")
-                        mediaPlayer.setSurface(texture.surface)
-                        mediaPlayer.isLooping = true
-                        mediaPlayers.add(mediaPlayer)
-
-                        renderable.material.setExternalTexture("videoTexture", texture)
-                    }
-
-                    Log.i(TAG, "inserted ${anchorNode.name}")
-                    attachNodeToParent(anchorNode, flutterArCoreNode.parentNodeName)
-
-                    for (node in flutterArCoreNode.children) {
-                        node.parentNodeName = flutterArCoreNode.name
-                        onAddNode(node, null)
-                    }
-                }
-            }
-        }
-        result.success(null)
-    }
-
-    fun onAddNode(flutterArCoreNode: FlutterArCoreNode, result: MethodChannel.Result?) {
-
-        Log.i(TAG, flutterArCoreNode.toString())
-        NodeFactory.makeNode(activity.applicationContext, flutterArCoreNode) { node, throwable ->
-
-            Log.i(TAG, "inserted ${node?.name}")
-
-/*            if (flutterArCoreNode.parentNodeName != null) {
-                Log.i(TAG, flutterArCoreNode.parentNodeName);
-                val parentNode: Node? = arSceneView?.scene?.findByName(flutterArCoreNode.parentNodeName)
-                parentNode?.addChild(node)
-            } else {
-                Log.i(TAG, "addNodeToSceneWithGeometry: NOT PARENT_NODE_NAME")
-                arSceneView?.scene?.addChild(node)
-            }*/
-            if (node != null) {
-                attachNodeToParent(node, flutterArCoreNode.parentNodeName)
-                for (n in flutterArCoreNode.children) {
-                    n.parentNodeName = flutterArCoreNode.name
-                    onAddNode(n, null)
-                }
-            }
-
-        }
-        result?.success(null)
     }
 
     private fun onAddNode(args: Map<*, *>?, result: MethodChannel.Result) {
@@ -604,9 +522,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     fun onDestroy() {
-        mediaPlayers.forEach { player ->
-            player.release()
-        }
+        VideoNode.dispose()
 
         if (arSceneView != null) {
             arSceneView?.scene?.removeOnUpdateListener(sceneUpdateListener)

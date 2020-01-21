@@ -5,8 +5,8 @@ import 'package:arcore_flutter_plugin/src/utils/vector_utils.dart';
 import 'package:flutter/widgets.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-class ArCoreNode {
-  ArCoreNode({
+class ARCoreNode {
+  ARCoreNode({
     this.geometry,
     this.renderingOrder = 0,
     Vector3 position,
@@ -32,7 +32,7 @@ class ArCoreNode {
   final ValueNotifier<Vector3> eulerAngles;
   final String name;
   final int renderingOrder;
-  final List<ArCoreNode> children;
+  final List<ARCoreNode> children;
 
   Map<String, dynamic> toMap() => <String, dynamic>{
         'dartType': runtimeType.toString(),

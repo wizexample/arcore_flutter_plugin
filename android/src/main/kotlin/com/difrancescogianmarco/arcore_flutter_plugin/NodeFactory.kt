@@ -16,7 +16,7 @@ class NodeFactory {
             Log.i(TAG, flutterNode.toString())
             when {
 
-                (flutterNode.dartType == "ARToolKitVideoNode") -> {
+                (flutterNode.dartType == "ARCoreVideoNode") -> {
                     flutterNode.shape?.materials?.first()?.let { material ->
                         material.videoPath?.let { videoPath ->
                             // creates video node after confirming material and videoPath are not null.

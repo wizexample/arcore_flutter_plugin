@@ -2,7 +2,7 @@ import 'package:vector_math/vector_math_64.dart';
 
 import 'arcore_node.dart';
 
-class ArCoreReferenceNode extends ArCoreNode {
+class ArCoreReferenceNode extends ARCoreNode {
   final String obcject3DFileName;
   ArCoreReferenceNode({
     this.url,

@@ -9,7 +9,7 @@ class AutoDetectPlane extends StatefulWidget {
 
 class _AutoDetectPlaneState extends State<AutoDetectPlane> {
   ArCoreController arCoreController;
-  ArCoreNode node;
+  ARCoreNode node;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +50,7 @@ class _AutoDetectPlaneState extends State<AutoDetectPlane> {
       materials: [material],
       radius: 0.1,
     );
-    node = ArCoreNode(
+    node = ARCoreNode(
         geometry: sphere,
         position: plane.centerPose.translation,
         rotation: plane.centerPose.rotation);

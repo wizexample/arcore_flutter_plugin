@@ -47,7 +47,7 @@ class _HelloWorldState extends State<HelloWorld> {
       materials: [materials],
     );
 
-    final node = ArCoreNode(
+    final node = ARCoreNode(
       name: 'img',
       geometry: view,
       position: vector.Vector3(0, 0, 0),
@@ -68,7 +68,7 @@ class _HelloWorldState extends State<HelloWorld> {
       materials: [material],
       radius: 0.05,
     );
-    final node = ArCoreNode(
+    final node = ARCoreNode(
       geometry: sphere,
       position: vector.Vector3(0, 0, -0),
     );
@@ -85,7 +85,7 @@ class _HelloWorldState extends State<HelloWorld> {
       radius: 0.5,
       height: 0.3,
     );
-    final node = ArCoreNode(
+    final node = ARCoreNode(
       geometry: cylindre,
       position: vector.Vector3(0.0, -0.5, -2.0),
     );
@@ -103,7 +103,7 @@ class _HelloWorldState extends State<HelloWorld> {
       height: 0.5,
       length: 0.5,
     );
-    final node = ArCoreNode(
+    final node = ARCoreNode(
       geometry: cube,
       position: vector.Vector3(-0.5, 0.5, -3.5),
     );

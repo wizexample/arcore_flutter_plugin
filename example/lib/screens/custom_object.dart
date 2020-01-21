@@ -44,7 +44,7 @@ class _CustomObjectState extends State<CustomObject> {
       radius: 0.03,
     );
 
-    final moon = ArCoreNode(
+    final moon = ARCoreNode(
       geometry: moonShape,
       position: vector.Vector3(0.2, 0, 0),
       rotation: vector.Vector4(0, 0, 0, 0),
@@ -63,7 +63,7 @@ class _CustomObjectState extends State<CustomObject> {
       radius: 0.1,
     );
 
-    final earth = ArCoreNode(
+    final earth = ARCoreNode(
         geometry: earthShape,
         children: [moon],
         position: plane.pose.translation + vector.Vector3(0.0, 1.0, 0.0),

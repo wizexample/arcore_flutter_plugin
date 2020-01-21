@@ -100,7 +100,7 @@ class ArCoreController {
     return Future.value();
   }
 
-  Future<void> add(ArCoreNode node, {String parentNodeName}) {
+  Future<void> add(ARCoreNode node, {String parentNodeName}) {
     assert(node != null);
     final params = _addParentNodeNameToParams(node.toMap(), parentNodeName);
     // print("######### ${node.toMap()}");
@@ -135,7 +135,7 @@ class ArCoreController {
     return geometryMap;
   }
 
-  void _subsribeToChanges(ArCoreNode node) {
+  void _subsribeToChanges(ARCoreNode node) {
     node.position.addListener(() => _handlePositionChanged(node));
     node.rotation.addListener(() => _handleRotationChanged(node));
     node.eulerAngles.addListener(() => _handleEulerAnglesChanged(node));
@@ -162,37 +162,37 @@ class ArCoreController {
     }
   }
 
-  void _handlePositionChanged(ArCoreNode node) {
+  void _handlePositionChanged(ARCoreNode node) {
     _channel.invokeMethod<void>('positionChanged',
         _getHandlerParams(node, convertVector3ToMap(node.position.value)));
   }
 
-  void _handleRotationChanged(ArCoreNode node) {
+  void _handleRotationChanged(ARCoreNode node) {
     _channel.invokeMethod<void>('rotationChanged',
         _getHandlerParams(node, convertVector4ToMap(node.rotation.value)));
   }
 
-  void _handleEulerAnglesChanged(ArCoreNode node) {
+  void _handleEulerAnglesChanged(ARCoreNode node) {
     _channel.invokeMethod<void>('eulerAnglesChanged',
         _getHandlerParams(node, convertVector3ToMap(node.eulerAngles.value)));
   }
 
-  void _handleScaleChanged(ArCoreNode node) {
+  void _handleScaleChanged(ARCoreNode node) {
     _channel.invokeMethod<void>('scaleChanged',
         _getHandlerParams(node, convertVector3ToMap(node.scale.value)));
   }
 
-  void _handleIsHiddenChanged(ArCoreNode node) {
+  void _handleIsHiddenChanged(ARCoreNode node) {
     _channel.invokeMethod<void>('isHiddenChanged',
         _getHandlerParams(node, {'isHidden': node.isHidden.value}));
   }
 
-  void _updateMaterials(ArCoreNode node) {
+  void _updateMaterials(ARCoreNode node) {
     _channel.invokeMethod<void>(
         'updateMaterials', _getHandlerParams(node, node.geometry.toMap()));
   }
 
-  void _subscribeToCylinderGeometry(ArCoreNode node) {
+  void _subscribeToCylinderGeometry(ARCoreNode node) {
     final ARToolKitCylinder cylinder = node.geometry;
     cylinder.radius.addListener(() => _updateSingleProperty(
         node, 'radius', cylinder.radius.value, 'geometry'));
@@ -200,7 +200,7 @@ class ArCoreController {
         node, 'height', cylinder.height.value, 'geometry'));
   }
 
-  void _subscribeToBoxGeometry(ArCoreNode node) {
+  void _subscribeToBoxGeometry(ARCoreNode node) {
     final ARToolKitBox box = node.geometry;
     box.width.addListener(() =>
         _updateSingleProperty(node, 'width', box.width.value, 'geometry'));
@@ -210,13 +210,13 @@ class ArCoreController {
         _updateSingleProperty(node, 'length', box.length.value, 'geometry'));
   }
 
-  void _subscribeToSphereGeometry(ArCoreNode node) {
+  void _subscribeToSphereGeometry(ARCoreNode node) {
     final ARToolKitSphere sphere = node.geometry;
     sphere.radius.addListener(() =>
         _updateSingleProperty(node, 'radius', sphere.radius.value, 'geometry'));
   }
 
-  void _subscribeToPlaneGeometry(ArCoreNode node) {
+  void _subscribeToPlaneGeometry(ARCoreNode node) {
     final ARToolKitPlane plane = node.geometry;
     plane.width.addListener(() =>
         _updateSingleProperty(node, 'width', plane.width.value, 'geometry'));
@@ -225,7 +225,7 @@ class ArCoreController {
   }
 
   void _updateSingleProperty(
-      ArCoreNode node, String propertyName, dynamic value, String keyProperty) {
+      ARCoreNode node, String propertyName, dynamic value, String keyProperty) {
     _channel.invokeMethod<void>(
         'updateSingleProperty',
         _getHandlerParams(node, <String, dynamic>{
@@ -236,7 +236,7 @@ class ArCoreController {
   }
 
   Map<String, dynamic> _getHandlerParams(
-      ArCoreNode node, Map<String, dynamic> params) {
+      ARCoreNode node, Map<String, dynamic> params) {
     final Map<String, dynamic> values = <String, dynamic>{'name': node.name}
       ..addAll(params);
     return values;

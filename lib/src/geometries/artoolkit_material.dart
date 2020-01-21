@@ -53,7 +53,7 @@ class ARToolKitVideoProperty {
   final bool isLoop;
   final String videoPath;
 
-  Map<String, dynamic> toMap() => <String, dynamic>{
+  Map<String, dynamic> toGMap() => <String, dynamic>{
         'isPlay': isPlay,
         'isLoop': isLoop,
         'videoPath': videoPath,

@@ -11,7 +11,7 @@ class RuntimeMaterials extends StatefulWidget {
 
 class _RuntimeMaterialsState extends State<RuntimeMaterials> {
   ArCoreController arCoreController;
-  ArCoreNode sphereNode;
+  ARCoreNode sphereNode;
 
   double metallic = 0.0;
   double roughness = 0.4;
@@ -70,7 +70,7 @@ class _RuntimeMaterialsState extends State<RuntimeMaterials> {
       materials: [material],
       radius: 0.1,
     );
-    sphereNode = ArCoreNode(
+    sphereNode = ARCoreNode(
       geometry: sphere,
       position: vector.Vector3(0, 0, -1.5),
     );
