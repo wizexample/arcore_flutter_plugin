@@ -7,7 +7,7 @@ enum TrackingState {
 }
 
 class ARCoreAnchor {
-  TrackingState tracking;
+  TrackingState trackingState;
   double extentX;
   double extentZ;
   ArCorePose centerPose;
@@ -16,13 +16,13 @@ class ARCoreAnchor {
     String trackStr = map["trackingState"];
     switch (trackStr) {
       case "TRACKING":
-        this.tracking = TrackingState.TRACKING;
+        this.trackingState = TrackingState.TRACKING;
         break;
       case "PAUSED":
-        this.tracking = TrackingState.PAUSED;
+        this.trackingState = TrackingState.PAUSED;
         break;
       default:
-        this.tracking = TrackingState.STOPPED;
+        this.trackingState = TrackingState.STOPPED;
     }
 
     this.extentX = map["extentX"];
