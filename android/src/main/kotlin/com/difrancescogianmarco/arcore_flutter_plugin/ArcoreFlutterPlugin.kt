@@ -50,12 +50,22 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         println("$PREPARE onMethodCall: ${call.method}")
         when (call.method) {
             "isSupported" -> {
-                val availability = ArCoreApk.getInstance().checkAvailability(context)
-                result.success(availability.isSupported)
+                checkARCoreApk(result)
             }
             else -> {
                 result.success(0)
             }
+        }
+    }
+
+    private fun checkARCoreApk(result: MethodChannel.Result) {
+        val availability = ArCoreApk.getInstance().checkAvailability(context)
+        if (availability.isTransient) {
+            Thread.sleep(200)
+            checkARCoreApk(result)
+        } else {
+            val installed = availability == ArCoreApk.Availability.SUPPORTED_INSTALLED
+            result.success(mapOf("supported" to availability.isSupported, "installed" to installed))
         }
     }
 }
