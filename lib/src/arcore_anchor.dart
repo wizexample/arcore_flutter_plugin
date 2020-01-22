@@ -8,12 +8,12 @@ enum TrackingState {
 
 class ARCoreAnchor {
   TrackingState tracking;
-  double extendX;
-  double extendZ;
+  double extentX;
+  double extentZ;
   ArCorePose centerPose;
 
   ARCoreAnchor.fromMap(Map<dynamic, dynamic> map) {
-    String trackStr = map["tracking"];
+    String trackStr = map["trackingState"];
     switch (trackStr) {
       case "TRACKING":
         this.tracking = TrackingState.TRACKING;
@@ -25,8 +25,8 @@ class ARCoreAnchor {
         this.tracking = TrackingState.STOPPED;
     }
 
-    this.extendX = map["extendX"];
-    this.extendZ = map["extendZ"];
+    this.extentX = map["extentX"];
+    this.extentZ = map["extentZ"];
     this.centerPose = ArCorePose.fromMap(map["centerPose"]);
   }
 }
@@ -59,16 +59,16 @@ class ARCoreMarker extends ARCoreAnchor {
 }
 
 class TrackingMethod {
-  static final TrackingMethod NOT_TRACKING = TrackingMethod._(0);
-  static final TrackingMethod FULL_TRACKING = TrackingMethod._(1);
-  static final TrackingMethod LAST_KNOWN_POSE = TrackingMethod._(2);
-  static final values = [
+  static const TrackingMethod NOT_TRACKING = TrackingMethod._(0);
+  static const TrackingMethod FULL_TRACKING = TrackingMethod._(1);
+  static const TrackingMethod LAST_KNOWN_POSE = TrackingMethod._(2);
+  static const values = [
     NOT_TRACKING,
     FULL_TRACKING,
     LAST_KNOWN_POSE,
   ];
 
-  TrackingMethod._(this._value);
+  const TrackingMethod._(this._value);
 
   final int _value;
 

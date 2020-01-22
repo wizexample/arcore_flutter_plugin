@@ -262,18 +262,18 @@ class ArCoreController {
 }
 
 class ApkAvailabilityStatus {
-  static final ApkAvailabilityStatus UnknownError = ApkAvailabilityStatus._(0);
-  static final ApkAvailabilityStatus UnknownChecking =
+  static const ApkAvailabilityStatus UnknownError = ApkAvailabilityStatus._(0);
+  static const ApkAvailabilityStatus UnknownChecking =
       ApkAvailabilityStatus._(1);
-  static final ApkAvailabilityStatus UnknownTimedOut =
+  static const ApkAvailabilityStatus UnknownTimedOut =
       ApkAvailabilityStatus._(2);
-  static final ApkAvailabilityStatus UnsupportedDeviceNotCapable =
+  static const ApkAvailabilityStatus UnsupportedDeviceNotCapable =
       ApkAvailabilityStatus._(100);
-  static final ApkAvailabilityStatus SupportedNotInstalled =
+  static const ApkAvailabilityStatus SupportedNotInstalled =
       ApkAvailabilityStatus._(201);
-  static final ApkAvailabilityStatus SupportedApkTooOld =
+  static const ApkAvailabilityStatus SupportedApkTooOld =
       ApkAvailabilityStatus._(202);
-  static final ApkAvailabilityStatus SupportedInstalled =
+  static const ApkAvailabilityStatus SupportedInstalled =
       ApkAvailabilityStatus._(203);
 
   static final values = [
@@ -286,7 +286,7 @@ class ApkAvailabilityStatus {
     SupportedInstalled
   ];
 
-  ApkAvailabilityStatus._(this._value);
+  const ApkAvailabilityStatus._(this._value);
 
   final int _value;
 
@@ -303,15 +303,15 @@ class ApkAvailabilityStatus {
 }
 
 class ApkInstallationStatus {
-  static final ApkInstallationStatus Installed = ApkInstallationStatus._(0);
-  static final ApkInstallationStatus InstallRequested =
+  static const ApkInstallationStatus Installed = ApkInstallationStatus._(0);
+  static const ApkInstallationStatus InstallRequested =
       ApkInstallationStatus._(1);
   static final values = [
     Installed,
     InstallRequested,
   ];
 
-  ApkInstallationStatus._(this._value);
+  const ApkInstallationStatus._(this._value);
 
   final int _value;
 
