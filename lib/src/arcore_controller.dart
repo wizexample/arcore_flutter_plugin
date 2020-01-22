@@ -44,7 +44,7 @@ class ArCoreController {
   static const MethodChannel _prepareMethodChannel =
       MethodChannel('arcore_prepare_plugin');
 
-  static Future<bool> isSupported() async {
+  static Future<int> isSupported() async {
     return await _prepareMethodChannel.invokeMethod('isSupported');
   }
 

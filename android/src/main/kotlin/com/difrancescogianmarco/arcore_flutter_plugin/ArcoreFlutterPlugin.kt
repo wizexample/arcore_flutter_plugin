@@ -64,8 +64,14 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
             Thread.sleep(200)
             checkARCoreApk(result)
         } else {
-            val installed = availability == ArCoreApk.Availability.SUPPORTED_INSTALLED
-            result.success(mapOf("supported" to availability.isSupported, "installed" to installed))
+            val ret = when {
+                (availability.isSupported) -> -1
+                (availability == ArCoreApk.Availability.SUPPORTED_INSTALLED) -> 3
+                (availability == ArCoreApk.Availability.SUPPORTED_INSTALLED) -> 2
+                (availability == ArCoreApk.Availability.SUPPORTED_NOT_INSTALLED) -> 1
+                else -> -2
+            }
+            result.success(ret)
         }
     }
 }
