@@ -1,5 +1,6 @@
 package com.difrancescogianmarco.arcore_flutter_plugin
 
+import android.app.Activity
 import android.content.Context
 import com.google.ar.core.ArCoreApk
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -10,7 +11,7 @@ import io.flutter.plugin.common.PluginRegistry
 
 class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     private var channel: MethodChannel? = null
-    private var context: Context? = null
+    lateinit var context: Activity
 
     companion object {
 
@@ -24,7 +25,7 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
                     .registerViewFactory("arcore_flutter_plugin", ArCoreViewFactory(registrar.messenger()))
 
             val instance = ArcoreFlutterPlugin(registrar.messenger())
-            instance.context = registrar.context()
+            instance.context = registrar.activity()
         }
     }
 
@@ -38,7 +39,6 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         channel = MethodChannel(binding.flutterEngine.dartExecutor, PREPARE).apply {
             setMethodCallHandler(this@ArcoreFlutterPlugin)
         }
-        context = binding.applicationContext
     }
 
     override fun onDetachedFromEngine(p0: FlutterPlugin.FlutterPluginBinding) {
@@ -49,8 +49,11 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         println("$PREPARE onMethodCall: ${call.method}")
         when (call.method) {
-            "isSupported" -> {
+            "getApkAvailabilityStatus" -> {
                 checkARCoreApk(result)
+            }
+            "requestApkInstallation" -> {
+                requestInstall(result)
             }
             else -> {
                 result.success(0)
@@ -76,5 +79,13 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
             }
             result.success(ret)
         }
+    }
+
+    private fun requestInstall(result: MethodChannel.Result) {
+        val ret = when(ArCoreApk.getInstance().requestInstall(context, false)) {
+            ArCoreApk.InstallStatus.INSTALLED -> 0
+            else -> 1
+        }
+        result.success(ret)
     }
 }

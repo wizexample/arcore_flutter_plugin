@@ -44,8 +44,12 @@ class ArCoreController {
   static const MethodChannel _prepareMethodChannel =
       MethodChannel('arcore_prepare_plugin');
 
-  static Future<int> isSupported() async {
-    return await _prepareMethodChannel.invokeMethod('isSupported');
+  static Future<int> getApkAvailabilityStatus() async {
+    return await _prepareMethodChannel.invokeMethod('getApkAvailabilityStatus');
+  }
+
+  static Future<int> requestApkInstallation() async {
+    return await _prepareMethodChannel.invokeMethod('requestApkInstallation');
   }
 
   init() async {
@@ -262,4 +266,9 @@ class ApkAvailabilityStatus {
   static const SupportedNotInstalled = 201;
   static const SupportedApkTooOld = 202;
   static const SupportedInstalled = 203;
+}
+
+class ApkInstallationStatus {
+  static const Installed = 0;
+  static const InstallRequested = 1;
 }
