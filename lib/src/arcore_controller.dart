@@ -253,3 +253,13 @@ class ArCoreController {
     _channel?.invokeMethod<void>('dispose');
   }
 }
+
+class ApkAvailabilityStatus {
+  static const UnknownError = 0;
+  static const UnknownChecking = 1;
+  static const UnknownTimedOut = 2;
+  static const UnsupportedDeviceNotCapable = 100;
+  static const SupportedNotInstalled = 201;
+  static const SupportedApkTooOld = 202;
+  static const SupportedInstalled = 203;
+}
