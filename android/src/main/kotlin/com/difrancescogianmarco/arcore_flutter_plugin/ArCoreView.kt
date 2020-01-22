@@ -111,6 +111,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 map["extentZ"] = augmentedImage.extentZ
                 map["nodeName"] = augmentedImage.name
                 map["markerName"] = augmentedImage.name
+                map["trackingMethod"] = getTrackingMethod(augmentedImage.trackingMethod)
                 if (augmentedImage.trackingState == TrackingState.TRACKING) {
                     if (!augmentedImageMap.containsKey(augmentedImage)) {
                         val node = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
@@ -174,6 +175,14 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         // Lastly request CAMERA permission which is required by ARCore.
         ArCoreUtils.requestCameraPermission(activity, RC_PERMISSIONS)
         setupLifeCycle(context)
+    }
+
+    private fun getTrackingMethod(method: AugmentedImage.TrackingMethod): Int {
+        return when (method) {
+            AugmentedImage.TrackingMethod.FULL_TRACKING -> 1
+            AugmentedImage.TrackingMethod.LAST_KNOWN_POSE -> 2
+            else -> 0
+        }
     }
 
     fun loadMesh(textureBytes: ByteArray?) {

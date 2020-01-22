@@ -44,12 +44,15 @@ class ArCoreController {
   static const MethodChannel _prepareMethodChannel =
       MethodChannel('arcore_prepare_plugin');
 
-  static Future<int> getApkAvailabilityStatus() async {
-    return await _prepareMethodChannel.invokeMethod('getApkAvailabilityStatus');
+  static Future<ApkAvailabilityStatus> getApkAvailabilityStatus() async {
+    int v =
+        await _prepareMethodChannel.invokeMethod('getApkAvailabilityStatus');
+    return ApkAvailabilityStatus.get(v);
   }
 
-  static Future<int> requestApkInstallation() async {
-    return await _prepareMethodChannel.invokeMethod('requestApkInstallation');
+  static Future<ApkInstallationStatus> requestApkInstallation() async {
+    int v = await _prepareMethodChannel.invokeMethod('requestApkInstallation');
+    return ApkInstallationStatus.get(v);
   }
 
   init() async {
@@ -259,16 +262,67 @@ class ArCoreController {
 }
 
 class ApkAvailabilityStatus {
-  static const UnknownError = 0;
-  static const UnknownChecking = 1;
-  static const UnknownTimedOut = 2;
-  static const UnsupportedDeviceNotCapable = 100;
-  static const SupportedNotInstalled = 201;
-  static const SupportedApkTooOld = 202;
-  static const SupportedInstalled = 203;
+  static final ApkAvailabilityStatus UnknownError = ApkAvailabilityStatus._(0);
+  static final ApkAvailabilityStatus UnknownChecking =
+      ApkAvailabilityStatus._(1);
+  static final ApkAvailabilityStatus UnknownTimedOut =
+      ApkAvailabilityStatus._(2);
+  static final ApkAvailabilityStatus UnsupportedDeviceNotCapable =
+      ApkAvailabilityStatus._(100);
+  static final ApkAvailabilityStatus SupportedNotInstalled =
+      ApkAvailabilityStatus._(201);
+  static final ApkAvailabilityStatus SupportedApkTooOld =
+      ApkAvailabilityStatus._(202);
+  static final ApkAvailabilityStatus SupportedInstalled =
+      ApkAvailabilityStatus._(203);
+
+  static final values = [
+    UnknownError,
+    UnknownChecking,
+    UnknownTimedOut,
+    UnsupportedDeviceNotCapable,
+    SupportedNotInstalled,
+    SupportedApkTooOld,
+    SupportedInstalled
+  ];
+
+  ApkAvailabilityStatus._(this._value);
+
+  final int _value;
+
+  static ApkAvailabilityStatus get(int value) {
+    ApkAvailabilityStatus ret = UnknownError;
+    values.forEach((m) {
+      if (m._value == value) {
+        ret = m;
+        return;
+      }
+    });
+    return ret;
+  }
 }
 
 class ApkInstallationStatus {
-  static const Installed = 0;
-  static const InstallRequested = 1;
+  static final ApkInstallationStatus Installed = ApkInstallationStatus._(0);
+  static final ApkInstallationStatus InstallRequested =
+      ApkInstallationStatus._(1);
+  static final values = [
+    Installed,
+    InstallRequested,
+  ];
+
+  ApkInstallationStatus._(this._value);
+
+  final int _value;
+
+  static ApkInstallationStatus get(int value) {
+    ApkInstallationStatus ret = InstallRequested;
+    values.forEach((m) {
+      if (m._value == value) {
+        ret = m;
+        return;
+      }
+    });
+    return ret;
+  }
 }

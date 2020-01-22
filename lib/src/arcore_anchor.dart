@@ -49,8 +49,37 @@ enum ARCorePlaneType {
 
 class ARCoreMarker extends ARCoreAnchor {
   String name;
+  TrackingMethod trackingMethod;
 
   ARCoreMarker.fromMap(Map map) : super.fromMap(map) {
     this.name = map["markerName"];
+    int v = map["trackingMethod"];
+    this.trackingMethod = TrackingMethod.get(v);
+  }
+}
+
+class TrackingMethod {
+  static final TrackingMethod NOT_TRACKING = TrackingMethod._(0);
+  static final TrackingMethod FULL_TRACKING = TrackingMethod._(1);
+  static final TrackingMethod LAST_KNOWN_POSE = TrackingMethod._(2);
+  static final values = [
+    NOT_TRACKING,
+    FULL_TRACKING,
+    LAST_KNOWN_POSE,
+  ];
+
+  TrackingMethod._(this._value);
+
+  final int _value;
+
+  static TrackingMethod get(int value) {
+    TrackingMethod ret = NOT_TRACKING;
+    values.forEach((m) {
+      if (m._value == value) {
+        ret = m;
+        return;
+      }
+    });
+    return ret;
   }
 }
