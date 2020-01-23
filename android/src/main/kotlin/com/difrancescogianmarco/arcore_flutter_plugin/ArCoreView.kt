@@ -458,10 +458,10 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         result.success(null)
     }
 
-    private fun debugNodeTree (node: NodeParent? = arSceneView?.scene) {
+    private fun debugNodeTree(node: NodeParent? = arSceneView?.scene, level: Int = 0) {
         node?.children?.forEach {
-            println("**** ${it.name} - ${it.worldScale} ${it.localScale} ${it.javaClass}")
-            debugNodeTree(it)
+            println("**** [$level] ${it.name} - ${it.worldScale} ${it.localScale} ${it.javaClass}")
+            debugNodeTree(it, level + 1)
         }
     }
 
