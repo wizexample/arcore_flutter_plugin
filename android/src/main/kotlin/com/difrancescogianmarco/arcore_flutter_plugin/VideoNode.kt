@@ -72,6 +72,11 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
         super.setLocalScale(p0)
     }
 
+    override fun setWorldScale(p0: Vector3?) {
+        println("**** setWorldScale: $p0")
+        super.setWorldScale(p0)
+    }
+
 }
 
 data class VideoTexture(val player: MediaPlayer) {
