@@ -415,6 +415,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             (map["name"] as? String)?.let { name ->
                 objectsParent.findByName(name)?.let { node ->
                     node.localScale = DecodableUtils.parseVector3(map)
+                    println("**** updateScale : [${node.name}] ${node.localScale}")
                 }
             }
         }

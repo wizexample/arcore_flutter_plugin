@@ -39,6 +39,7 @@ class FlutterArCoreNode(map: Map<*, *>) {
         node.name = name
         node.localPosition = position
         node.localScale = scale
+        println("**** buildNode:[${node.name}] ${node.localScale}")
         node.localRotation = rotation
 
         return node
