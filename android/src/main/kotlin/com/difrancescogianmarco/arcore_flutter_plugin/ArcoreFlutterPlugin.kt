@@ -1,7 +1,6 @@
 package com.difrancescogianmarco.arcore_flutter_plugin
 
 import android.app.Activity
-import android.content.Context
 import com.google.ar.core.ArCoreApk
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.BinaryMessenger
@@ -82,7 +81,8 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
 
     private fun requestInstall(result: MethodChannel.Result) {
-        val ret = when(ArCoreApk.getInstance().requestInstall(context, false)) {
+        val ret = when (ArCoreApk.getInstance().requestInstall(context, true,
+                ArCoreApk.InstallBehavior.REQUIRED, ArCoreApk.UserMessageType.USER_ALREADY_INFORMED)) {
             ArCoreApk.InstallStatus.INSTALLED -> 0
             else -> 1
         }
