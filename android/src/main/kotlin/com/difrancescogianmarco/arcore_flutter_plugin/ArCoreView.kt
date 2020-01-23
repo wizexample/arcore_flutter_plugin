@@ -60,6 +60,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     init {
         methodChannel.setMethodCallHandler(this)
         arSceneView = ArSceneView(context)
+        objectsParent.name = "objectsParent"
         arSceneView?.scene?.addChild(objectsParent)
 
         // Set up a tap gesture detector.
