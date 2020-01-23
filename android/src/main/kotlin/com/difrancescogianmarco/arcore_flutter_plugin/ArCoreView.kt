@@ -211,6 +211,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         val args = call.arguments as? Map<*, *>
         println("onMethodCall $method $args")
 
+        debugNodeTree()
+
         when (call.method) {
             "init" -> {
                 arScenViewInit(call, result, activity)
@@ -454,6 +456,13 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             node.renderable?.material = material
         }
         result.success(null)
+    }
+
+    private fun debugNodeTree (node: NodeParent? = arSceneView?.scene) {
+        node?.children?.forEach {
+            println("**** ${it.name} - ${it.worldScale} ${it.localScale} ${it.javaClass}")
+            debugNodeTree(it)
+        }
     }
 
     override fun getView(): View {
