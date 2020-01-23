@@ -262,19 +262,20 @@ class ArCoreController {
 }
 
 class ApkAvailabilityStatus {
-  static const ApkAvailabilityStatus UnknownError = ApkAvailabilityStatus._(0);
+  static const ApkAvailabilityStatus UnknownError =
+      ApkAvailabilityStatus._(0, 'UnknownError');
   static const ApkAvailabilityStatus UnknownChecking =
-      ApkAvailabilityStatus._(1);
+      ApkAvailabilityStatus._(1, 'UnknownChecking');
   static const ApkAvailabilityStatus UnknownTimedOut =
-      ApkAvailabilityStatus._(2);
+      ApkAvailabilityStatus._(2, 'UnknownTimedOut');
   static const ApkAvailabilityStatus UnsupportedDeviceNotCapable =
-      ApkAvailabilityStatus._(100);
+      ApkAvailabilityStatus._(100, 'UnsupportedDeviceNotCapable');
   static const ApkAvailabilityStatus SupportedNotInstalled =
-      ApkAvailabilityStatus._(201);
+      ApkAvailabilityStatus._(201, 'SupportedNotInstalled');
   static const ApkAvailabilityStatus SupportedApkTooOld =
-      ApkAvailabilityStatus._(202);
+      ApkAvailabilityStatus._(202, 'SupportedApkTooOld');
   static const ApkAvailabilityStatus SupportedInstalled =
-      ApkAvailabilityStatus._(203);
+      ApkAvailabilityStatus._(203, 'SupportedInstalled');
 
   static final values = [
     UnknownError,
@@ -286,9 +287,10 @@ class ApkAvailabilityStatus {
     SupportedInstalled
   ];
 
-  const ApkAvailabilityStatus._(this._value);
+  const ApkAvailabilityStatus._(this._value, this._text);
 
   final int _value;
+  final String _text;
 
   static ApkAvailabilityStatus get(int value) {
     ApkAvailabilityStatus ret = UnknownError;
@@ -300,20 +302,27 @@ class ApkAvailabilityStatus {
     });
     return ret;
   }
+
+  @override
+  String toString() {
+    return '$_text - $_value';
+  }
 }
 
 class ApkInstallationStatus {
-  static const ApkInstallationStatus Installed = ApkInstallationStatus._(0);
+  static const ApkInstallationStatus Installed =
+      ApkInstallationStatus._(0, 'Installed');
   static const ApkInstallationStatus InstallRequested =
-      ApkInstallationStatus._(1);
+      ApkInstallationStatus._(1, 'InstallRequested');
   static final values = [
     Installed,
     InstallRequested,
   ];
 
-  const ApkInstallationStatus._(this._value);
+  const ApkInstallationStatus._(this._value, this._text);
 
   final int _value;
+  final String _text;
 
   static ApkInstallationStatus get(int value) {
     ApkInstallationStatus ret = InstallRequested;
@@ -324,5 +333,10 @@ class ApkInstallationStatus {
       }
     });
     return ret;
+  }
+
+  @override
+  String toString() {
+    return '$_text - $_value';
   }
 }

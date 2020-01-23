@@ -59,18 +59,22 @@ class ARCoreMarker extends ARCoreAnchor {
 }
 
 class TrackingMethod {
-  static const TrackingMethod NOT_TRACKING = TrackingMethod._(0);
-  static const TrackingMethod FULL_TRACKING = TrackingMethod._(1);
-  static const TrackingMethod LAST_KNOWN_POSE = TrackingMethod._(2);
+  static const TrackingMethod NOT_TRACKING =
+      TrackingMethod._(0, 'NOT_TRACKING');
+  static const TrackingMethod FULL_TRACKING =
+      TrackingMethod._(1, 'FULL_TRACKING');
+  static const TrackingMethod LAST_KNOWN_POSE =
+      TrackingMethod._(2, 'LAST_KNOWN_POSE');
   static const values = [
     NOT_TRACKING,
     FULL_TRACKING,
     LAST_KNOWN_POSE,
   ];
 
-  const TrackingMethod._(this._value);
+  const TrackingMethod._(this._value, this._text);
 
   final int _value;
+  final String _text;
 
   static TrackingMethod get(int value) {
     TrackingMethod ret = NOT_TRACKING;
@@ -81,5 +85,10 @@ class TrackingMethod {
       }
     });
     return ret;
+  }
+
+  @override
+  String toString() {
+    return '$_text - $_value';
   }
 }
