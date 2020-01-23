@@ -49,6 +49,7 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
             val vWidth = player.videoWidth
             val vHeight = player.videoHeight
             val scale = min((params.scale.x / vWidth), (params.scale.y / vHeight))
+            println("w: $vWidth, h: $vHeight, param: [${params.scale.x}, ${params.scale.x}] -> $scale")
             localScale = Vector3(scale * vWidth, scale * vHeight, 1.0f)
         }
 

@@ -569,7 +569,6 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     private fun attachNodeToParent(node: Node?, parentNodeName: String?) {
-        println("□■□■ attachNodeToParent $node / $parentNodeName")
         if (parentNodeName != null) {
             val parentNode: Node? = objectsParent.findByName(parentNodeName)
             parentNode?.addChild(node)
