@@ -18,6 +18,7 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
         val videos = HashMap<String, VideoTexture>()
         fun dispose() {
             videos.forEach { (_, v) -> v.player.release() }
+            videos.clear()
         }
     }
 
