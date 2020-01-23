@@ -77,6 +77,7 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
         super.setWorldScale(p0)
     }
 
+    
 }
 
 data class VideoTexture(val player: MediaPlayer) {

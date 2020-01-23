@@ -428,6 +428,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 objectsParent.findByName(name)?.let { node ->
                     val isEnabled = !((map["isHidden"] as? Boolean) ?: true)
                     node.isEnabled = isEnabled
+                    println("**** setEnabled [${node.name}] ${node.localScale} - $isEnabled")
                     if (node is VideoNode) {
                         if (!isEnabled) {
                             node.video.player.pause()
