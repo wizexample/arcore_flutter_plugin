@@ -56,7 +56,7 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
             var parent = this as Node?
             val sb = StringBuilder()
             while (parent != null) {
-                sb.append("**** - ${parent.name} - ${parent.localScale} $parent\n")
+                sb.append("**** - ${parent.name} - ${parent.localScale} ${parent.worldScale}\n")
                 parent = parent.parent
             }
             println("${sb.toString()}")
