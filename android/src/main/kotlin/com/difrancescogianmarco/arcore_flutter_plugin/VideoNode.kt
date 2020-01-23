@@ -45,13 +45,15 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
                     this.renderable = renderable
                 }
 
-        val vWidth = video.player.videoWidth
-        val vHeight = video.player.videoHeight
-        val scale = min((params.scale.x / vWidth), (params.scale.y / vHeight))
+        video.player.setOnPreparedListener {player ->
+            val vWidth = player.videoWidth
+            val vHeight = player.videoHeight
+            val scale = min((params.scale.x / vWidth), (params.scale.y / vHeight))
+            localScale = Vector3(scale * vWidth, scale * vHeight, 1.0f)
+        }
 
         name = params.name
         localPosition = params.position
-        localScale = Vector3(scale * vWidth, scale * vHeight, 1.0f)
         localRotation = params.rotation
     }
 
