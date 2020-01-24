@@ -25,7 +25,7 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
     val video: VideoTexture
 
     init {
-        video = videos.get(videoPath) ?: let {
+        video = videos[videoPath] ?: let {
             val uri = Uri.parse(videoPath)
             println("uri: $uri")
             val p = MediaPlayer.create(context, uri)
