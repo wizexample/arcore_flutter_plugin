@@ -116,10 +116,10 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 map["trackingMethod"] = getTrackingMethod(augmentedImage.trackingMethod)
                 if (augmentedImage.trackingState == TrackingState.TRACKING) {
                     if (!augmentedImageMap.containsKey(augmentedImage)) {
-                        val node = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
-                        node.name = augmentedImage.name
-//                        objectsParent.addChild(node)
-                        augmentedImageMap[augmentedImage] = node
+                        val anchorNode = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
+                        anchorNode.name = augmentedImage.name
+                        objectsParent.addChild(anchorNode)
+                        augmentedImageMap[augmentedImage] = anchorNode
                         methodChannel.invokeMethod("didAddNodeForAnchor", map)
 
                         // test renderable
