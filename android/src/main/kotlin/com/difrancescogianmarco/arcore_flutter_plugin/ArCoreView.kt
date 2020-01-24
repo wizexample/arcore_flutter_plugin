@@ -119,6 +119,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                         val anchorNode = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
                         anchorNode.name = augmentedImage.name
                         objectsParent.addChild(anchorNode)
+                        nodes[anchorNode.name] = anchorNode
                         augmentedImageMap[augmentedImage] = anchorNode
                         methodChannel.invokeMethod("didAddNodeForAnchor", map)
 
