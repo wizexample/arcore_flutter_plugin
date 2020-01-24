@@ -37,7 +37,6 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private val methodChannel: MethodChannel = MethodChannel(messenger, "arcore_flutter_plugin_$id")
     private val activity: Activity = (context.applicationContext as FlutterApplication).currentActivity
     lateinit var activityLifecycleCallbacks: Application.ActivityLifecycleCallbacks
-    private var installRequested: Boolean = false
     private var mUserRequestedInstall = true
     private val TAG: String = ArCoreView::class.java.name
     private var arSceneView: ArSceneView? = null
@@ -56,6 +55,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private var augmentedImageDatabase: AugmentedImageDatabase? = null
     private var isReady = false
     private val augmentedImageMap = HashMap<AugmentedImage, Node>()
+
+    private val nodes = HashMap<String, Node>()
 
     init {
         methodChannel.setMethodCallHandler(this)
@@ -117,8 +118,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                     if (!augmentedImageMap.containsKey(augmentedImage)) {
                         val node = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
                         node.name = augmentedImage.name
-                        objectsParent.addChild(node)
-                        augmentedImageMap.put(augmentedImage, node)
+//                        objectsParent.addChild(node)
+                        augmentedImageMap[augmentedImage] = node
                         methodChannel.invokeMethod("didAddNodeForAnchor", map)
 
                         // test renderable
@@ -215,7 +216,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
         when (call.method) {
             "init" -> {
-                arScenViewInit(call, result, activity)
+                arSceneViewInit(call, result, activity)
             }
             "addNode" -> {
                 onAddNode(args, result)
@@ -240,7 +241,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             }
             "updateMaterials" -> {
                 Log.i(TAG, " updateMaterials")
-                updateMaterials(call, result)
+                updateMaterials(args, result)
             }
             "loadMesh" -> {
                 val map = call.arguments as HashMap<String, Any>
@@ -334,7 +335,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         }
     }
 
-    private fun arScenViewInit(call: MethodCall, result: MethodChannel.Result, context: Context) {
+    private fun arSceneViewInit(call: MethodCall, result: MethodChannel.Result, context: Context) {
         Log.i(TAG, "arSceneViewInit")
         val enableTapRecognizer: Boolean? = call.argument("enableTapRecognizer")
         if (enableTapRecognizer != null && enableTapRecognizer) {
@@ -361,6 +362,20 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         result.success(null)
     }
 
+
+    private fun findNode(name: Any?, exec: (node: Node) -> Unit, onNotFound: (() -> Unit)? = null) {
+        var found = false
+        (name as? String)?.let {
+            nodes[it]?.let { node ->
+                found = true
+                exec(node)
+            }
+        }
+        if (!found && onNotFound != null) {
+            onNotFound()
+        }
+    }
+
     private fun onAddNode(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
             addNode(FlutterArCoreNode(map))
@@ -370,11 +385,9 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
     private fun removeNode(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
-            (map["nodeName"] as? String)?.let { name ->
-                objectsParent.findByName(name)?.let { node ->
-                    objectsParent.removeChild(node)
-                }
-            }
+            findNode(map["nodeName"], { node ->
+                objectsParent.removeChild(node)
+            })
         }
 
         result.success(null)
@@ -382,79 +395,73 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
     private fun updatePosition(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
-            (map["name"] as? String)?.let { name ->
-                objectsParent.findByName(name)?.let { node ->
-                    node.localPosition = DecodableUtils.parseVector3(map)
-                }
-            }
+            findNode(map["name"], { node ->
+                node.localPosition = DecodableUtils.parseVector3(map)
+            })
         }
         result.success(null)
     }
 
     private fun updateRotation(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
-            (map["name"] as? String)?.let { name ->
-                objectsParent.findByName(name)?.let { node ->
-                    node.localRotation = DecodableUtils.parseQuaternion(map)
-                }
-            }
+            findNode(map["name"], { node ->
+                node.localRotation = DecodableUtils.parseQuaternion(map)
+            })
         }
         result.success(null)
     }
 
     private fun updateEulerAngles(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
-            (map["name"] as? String)?.let { name ->
-                objectsParent.findByName(name)?.let { node ->
-                    node.localRotation = Quaternion.eulerAngles(DecodableUtils.parseVector3(map))
-                }
-            }
+            findNode(map["name"], { node ->
+                node.localRotation = Quaternion.eulerAngles(DecodableUtils.parseVector3(map))
+            })
         }
+
         result.success(null)
     }
 
     private fun updateScale(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
-            (map["name"] as? String)?.let { name ->
-                objectsParent.findByName(name)?.let { node ->
-                    node.localScale = DecodableUtils.parseVector3(map)
-                }
-            }
+            findNode(map["name"], { node ->
+                node.localScale = DecodableUtils.parseVector3(map)
+            })
         }
         result.success(null)
     }
 
     private fun updateVisibility(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
-            (map["name"] as? String)?.let { name ->
-                objectsParent.findByName(name)?.let { node ->
-                    val isEnabled = !((map["isHidden"] as? Boolean) ?: true)
-                    node.isEnabled = isEnabled
-                    println("**** setEnabled [${node.name}] ${node.localScale} ${node.worldScale} - $isEnabled")
-                    if (node is VideoNode) {
-                        if (!isEnabled) {
-                            node.video.player.pause()
-                        } else if (!node.video.player.isPlaying) {
-                            node.video.player.start()
-                        }
+            findNode(map["name"], { node ->
+                val isEnabled = !((map["isHidden"] as? Boolean) ?: true)
+                node.isEnabled = isEnabled
+                if (node is VideoNode) {
+                    if (!isEnabled) {
+                        node.video.player.pause()
+                    } else if (!node.video.player.isPlaying) {
+                        node.video.player.start()
                     }
                 }
-            }
+            })
+
         }
 
         result.success(0)
     }
 
 
-    fun updateMaterials(call: MethodCall, result: MethodChannel.Result) {
-        val name = call.argument<String>("name")
-        val materials = call.argument<ArrayList<HashMap<String, *>>>("materials")!!
-        val node = arSceneView?.scene?.findByName(name)
-        val oldMaterial = node?.renderable?.material?.makeCopy()
-        if (oldMaterial != null) {
-            val material = MaterialCustomFactory.updateMaterial(oldMaterial, materials[0])
-            node.renderable?.material = material
+    private fun updateMaterials(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            findNode(map["name"], { node ->
+                (map["materials"] as? ArrayList<HashMap<String, *>>)?.let { materials ->
+                    node.renderable?.material?.makeCopy()?.let { oldMaterial ->
+                        val material = MaterialCustomFactory.updateMaterial(oldMaterial, materials[0])
+                        node.renderable?.material = material
+                    }
+                }
+            })
         }
+
         result.success(null)
     }
 
@@ -567,28 +574,28 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     private fun addNode(flutterArCoreNode: FlutterArCoreNode) {
-
-        NodeFactory.makeNode(activity.applicationContext, flutterArCoreNode) { node, _ ->
-            if (node != null) {
-                attachNodeToParent(node, flutterArCoreNode.parentNodeName)
-                for (n in flutterArCoreNode.children) {
-                    n.parentNodeName = flutterArCoreNode.name
-                    addNode(n)
+        nodes[flutterArCoreNode.name] ?: let {
+            NodeFactory.makeNode(activity.applicationContext, flutterArCoreNode) { node, _ ->
+                if (node != null) {
+                    attachNodeToParent(node, flutterArCoreNode.parentNodeName)
+                    for (n in flutterArCoreNode.children) {
+                        n.parentNodeName = flutterArCoreNode.name
+                        addNode(n)
+                    }
                 }
             }
         }
     }
 
-    private fun attachNodeToParent(node: Node?, parentNodeName: String?) {
-        if (parentNodeName != null) {
-            val parentNode: Node? = objectsParent.findByName(parentNodeName)
-            parentNode?.addChild(node) ?: let {
-                objectsParent.addChild(node)
-            }
-        } else {
+    private fun attachNodeToParent(node: Node, parentNodeName: String?) {
+        findNode(parentNodeName, { parentNode ->
+            parentNode.addChild(node)
+        }) {
             objectsParent.addChild(node)
         }
+        nodes[node.name] = node
     }
+
 
     /* private fun tryPlaceNode(tap: MotionEvent?, frame: Frame) {
         if (tap != null && frame.camera.trackingState == TrackingState.TRACKING) {
