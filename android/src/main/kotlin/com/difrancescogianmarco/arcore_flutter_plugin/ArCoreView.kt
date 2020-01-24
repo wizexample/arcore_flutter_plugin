@@ -255,10 +255,18 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 (call.arguments as? Map<*, *>)?.let { map ->
                     val imageName = map["imageName"] as? String ?: return
                     val markerSizeMeter = (map["markerSizeMeter"] as? Number ?: 1).toFloat()
-                    val bytes = (map["imageBytes"] as? ByteArray) ?: return
-                    val bytesLength = (map["imageLength"] as? Int) ?: return
-                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytesLength)
+                    val bitmap = (map["filePath"] as? String)?.let {filePath ->
+                        BitmapFactory.decodeFile(filePath)
+                    } ?:let {
+                        val bytes = (map["imageBytes"] as? ByteArray) ?: return
+                        val bytesLength = (map["imageLength"] as? Int) ?: return
+                        BitmapFactory.decodeByteArray(bytes, 0, bytesLength)
+                    }
                     println("□■□■ addImageRunWithConfigAndImage $imageName")
+                    bitmap?:let {
+                        println("addImageRunWithConfigAndImage bitmap not satisfied.")
+                        return
+                    }
                     augmentedImageParams.add(ARReferenceImage(imageName, bitmap, markerSizeMeter))
                 }
             }
