@@ -212,9 +212,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         val method = call.method
         val args = call.arguments as? Map<*, *>
         println("onMethodCall $method $args")
-
-        debugNodeTree()
-
+//        debugNodeTree()
         when (call.method) {
             "init" -> {
                 arSceneViewInit(call, result, activity)

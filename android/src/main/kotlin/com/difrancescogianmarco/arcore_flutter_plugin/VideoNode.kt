@@ -51,15 +51,6 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
             val vHeight = player.videoHeight
             val scale = min((params.scale.x / vWidth), (params.scale.y / vHeight))
             localScale = Vector3(scale * vWidth, scale * vHeight, 0.01f)
-
-            println("**** prepared: ")
-            var parent = this as Node?
-            val sb = StringBuilder()
-            while (parent != null) {
-                sb.append("**** - ${parent.name} - ${parent.localScale} ${parent.worldScale}\n")
-                parent = parent.parent
-            }
-            println("${sb.toString()}")
         }
 
         name = params.name
@@ -67,17 +58,6 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
         localRotation = params.rotation
     }
 
-    override fun setLocalScale(p0: Vector3?) {
-        println("**** setLocalScale: $p0")
-        super.setLocalScale(p0)
-    }
-
-    override fun setWorldScale(p0: Vector3?) {
-        println("**** setWorldScale: $p0")
-        super.setWorldScale(p0)
-    }
-
-    
 }
 
 data class VideoTexture(val player: MediaPlayer) {
