@@ -36,7 +36,7 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
             ret
         }
         ModelRenderable.builder()
-                .setSource(context, R.raw.chroma_key_video)
+                .setSource(context, R.raw.slate)
                 .build()
                 .thenAccept { renderable ->
                     renderable.material.setExternalTexture("videoTexture", video.texture)

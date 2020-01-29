@@ -53,10 +53,10 @@ class _HelloWorldState extends State<HelloWorld> {
       materials: [materials],
     );
 
-    final initialPosition = vector.Vector3(0, 0, -3);
+    final initialPosition = vector.Vector3(0, 0, -5);
     final left = vector.Vector3(-1, 0, 0);
     final rotation = vector.Quaternion.axisAngle(left, Math.pi / 2);
-    final initialScale = vector.Vector3(0.5, 0.5, 0.1);
+    final initialScale = vector.Vector3(5.0, 5.0, 0.1);
     final dir = await getTemporaryDirectory();
     final _localFilePath = dir.path + '/mov.mp4';
     if (!DartFile.File(_localFilePath).existsSync()) {
