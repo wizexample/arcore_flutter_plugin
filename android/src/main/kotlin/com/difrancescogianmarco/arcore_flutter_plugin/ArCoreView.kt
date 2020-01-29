@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.GestureDetector
@@ -30,6 +31,9 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 
 class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: Int,
@@ -255,15 +259,15 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 (call.arguments as? Map<*, *>)?.let { map ->
                     val imageName = map["imageName"] as? String ?: return
                     val markerSizeMeter = (map["markerSizeMeter"] as? Number ?: 1).toFloat()
-                    val bitmap = (map["filePath"] as? String)?.let {filePath ->
+                    val bitmap = (map["filePath"] as? String)?.let { filePath ->
                         BitmapFactory.decodeFile(filePath)
-                    } ?:let {
+                    } ?: let {
                         val bytes = (map["imageBytes"] as? ByteArray) ?: return
                         val bytesLength = (map["imageLength"] as? Int) ?: return
                         BitmapFactory.decodeByteArray(bytes, 0, bytesLength)
                     }
                     println("□■□■ addImageRunWithConfigAndImage $imageName")
-                    bitmap?:let {
+                    bitmap ?: let {
                         println("addImageRunWithConfigAndImage bitmap not satisfied.")
                         return
                     }
@@ -522,6 +526,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                     setupAugmentedImageDatabase(config, session)
                     config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
                     config.focusMode = Config.FocusMode.AUTO
+                    set30fpsForPixel3(session)
                     session.configure(config)
                     arSceneView?.setupSession(session)
                 }
@@ -546,6 +551,27 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
         if (arSceneView?.session != null) {
             Log.i(TAG, "Searching for surfaces")
+        }
+    }
+
+    private fun set30fpsForPixel3(session: Session) {
+        val model = Build.MODEL
+        // Pixel 3 and Pixel 3 XL are not supported autofocus on using 60fps tracking mode.
+        // to be enable autofocus, set 30fps tracking mode for above devices.
+        // see: https://developers.google.com/ar/discover/supported-devices
+        if (model == "Pixel 3" || model == "Pixel 3 XL") {
+            val filter = CameraConfigFilter(session).setTargetFps(
+                    EnumSet.of(CameraConfig.TargetFps.TARGET_FPS_30))
+            val configsList = session.getSupportedCameraConfigs(filter)
+
+            var highestResConfig = configsList[0]
+            configsList.forEach { config ->
+                if (config.imageSize.height > highestResConfig.imageSize.height) {
+                    highestResConfig = config
+                }
+            }
+
+            session.cameraConfig = highestResConfig
         }
     }
 
