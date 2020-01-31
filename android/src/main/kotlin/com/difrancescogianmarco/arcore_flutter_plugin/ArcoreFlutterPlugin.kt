@@ -7,6 +7,7 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.PluginRegistry
+import android.os.Handler
 
 class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     private var channel: MethodChannel? = null
@@ -63,8 +64,9 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     private fun checkARCoreApk(result: MethodChannel.Result) {
         val availability = ArCoreApk.getInstance().checkAvailability(context)
         if (availability.isTransient) {
-            Thread.sleep(200)
-            checkARCoreApk(result)
+            Handler().postDelayed(Runnable {
+                checkARCoreApk(result)
+            }, 200);
         } else {
             val ret = when (availability) {
                 ArCoreApk.Availability.UNKNOWN_ERROR -> 0
