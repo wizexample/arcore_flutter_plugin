@@ -47,4 +47,9 @@ class ARCoreNode {
         'children':
             this.children.map((arCoreNode) => arCoreNode.toMap()).toList(),
       }..removeWhere((String k, dynamic v) => v == null);
+
+  @override
+  String toString() {
+    return toMap().toString();
+  }
 }

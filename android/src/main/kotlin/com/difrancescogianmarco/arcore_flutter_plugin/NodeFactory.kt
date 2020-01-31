@@ -25,6 +25,9 @@ class NodeFactory {
                         }
                     }
                 }
+                (flutterNode.dartType == "ARCoreNode") -> {
+                    handler(flutterNode.buildNode(), null)
+                }
                 else -> {
                     // picture, or primitive shape
                     val node = flutterNode.buildNode()
