@@ -1,3 +1,4 @@
+import 'package:arcore_flutter_plugin/arcore_flutter_plugin.dart';
 import 'package:arcore_flutter_plugin/src/arcore_android_view.dart';
 import 'package:arcore_flutter_plugin/src/arcore_controller.dart';
 import 'package:flutter/foundation.dart';
@@ -16,6 +17,7 @@ class ArCoreView extends StatefulWidget {
 
 //  final UnsupportedHandler onArCoreUnsupported;
 
+  final ARCoreSessionConfig config;
   final bool enableTapRecognizer;
   final bool enableUpdateListener;
   final ArCoreViewType type;
@@ -24,6 +26,7 @@ class ArCoreView extends StatefulWidget {
     Key key,
     @required
         this.onArCoreViewCreated, //    @required this.onArCoreUnsupported,
+    this.config,
     this.enableTapRecognizer = false,
     this.enableUpdateListener = false,
     this.type = ArCoreViewType.STANDARD_VIEW,
@@ -48,6 +51,7 @@ class _ArCoreViewState extends State<ArCoreView> with WidgetsBindingObserver {
           viewType: 'arcore_flutter_plugin',
           onPlatformViewCreated: _onPlatformViewCreated,
           arCoreViewType: widget.type,
+          config: widget.config,
         ),
       );
     }

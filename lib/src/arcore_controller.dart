@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:arcore_flutter_plugin/arcore_flutter_plugin.dart';
 import 'package:arcore_flutter_plugin/src/arcore_anchor.dart';
 import 'package:arcore_flutter_plugin/src/geometries/arcore_box.dart';
 import 'package:arcore_flutter_plugin/src/geometries/arcore_cylinder.dart';

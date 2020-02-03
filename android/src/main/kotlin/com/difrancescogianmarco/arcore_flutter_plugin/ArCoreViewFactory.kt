@@ -34,6 +34,6 @@ class ArCoreViewFactory(val messenger: BinaryMessenger) : PlatformViewFactory(St
         if (type == "faces") {
             return ArCoreFaceView(context, messenger, id)
         }
-        return ArCoreView(context, messenger, id, ARType.get(type))
+        return ArCoreView(context, messenger, id, ARType.get(type), args)
     }
 }

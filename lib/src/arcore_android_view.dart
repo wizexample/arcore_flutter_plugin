@@ -1,3 +1,4 @@
+import 'package:arcore_flutter_plugin/arcore_flutter_plugin.dart';
 import 'package:arcore_flutter_plugin/src/arcore_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +15,7 @@ class ArCoreAndroidView extends AndroidView {
     @required this.viewType,
     this.onPlatformViewCreated,
     this.arCoreViewType = ArCoreViewType.STANDARD_VIEW,
+    ARCoreSessionConfig config,
   }) : super(
           viewType: viewType,
           onPlatformViewCreated: onPlatformViewCreated,
@@ -22,7 +24,8 @@ class ArCoreAndroidView extends AndroidView {
                 ? "faces"
                 : arCoreViewType == ArCoreViewType.AUGMENTED_IMAGE
                     ? "images"
-                    : "standard"
+                    : "standard",
+            'config': config.toMap(),
           },
           creationParamsCodec: const StandardMessageCodec(),
         );

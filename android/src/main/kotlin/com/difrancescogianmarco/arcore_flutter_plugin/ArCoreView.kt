@@ -37,11 +37,12 @@ import kotlin.collections.HashMap
 
 
 class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: Int,
-                 private val arType: ARType) : PlatformView, MethodChannel.MethodCallHandler {
+                 private val arType: ARType, args: Any?) : PlatformView, MethodChannel.MethodCallHandler {
     private val methodChannel: MethodChannel = MethodChannel(messenger, "arcore_flutter_plugin_$id")
     private val activity: Activity = (context.applicationContext as FlutterApplication).currentActivity
     lateinit var activityLifecycleCallbacks: Application.ActivityLifecycleCallbacks
     private var mUserRequestedInstall = true
+    private val sessionConfig: ARCoreSessionConfig
     private val TAG: String = ArCoreView::class.java.name
     private var arSceneView: ArSceneView? = null
     private val objectsParent = Node()
@@ -63,6 +64,16 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private val nodes = HashMap<String, Node>()
 
     init {
+        println("args: $args")
+        var tempConfig: ARCoreSessionConfig = ARCoreSessionConfig.defaultConfig
+        (args as? Map<*, *>)?.let { map ->
+            (map["config"] as? Map<*, *>)?.let { config ->
+                tempConfig = ARCoreSessionConfig.fromMap(config)
+            }
+        }
+        sessionConfig = tempConfig
+
+
         methodChannel.setMethodCallHandler(this)
         arSceneView = ArSceneView(context)
         objectsParent.name = "objectsParent"
@@ -216,7 +227,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         val method = call.method
         val args = call.arguments as? Map<*, *>
         println("onMethodCall $method $args")
-//        debugNodeTree()
+        debugNodeTree()
         when (call.method) {
             "init" -> {
                 arSceneViewInit(call, result, activity)
@@ -524,6 +535,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                         config.augmentedFaceMode = Config.AugmentedFaceMode.MESH3D
                     }
                     setupAugmentedImageDatabase(config, session)
+                    config.planeFindingMode = sessionConfig.planeFindingMode
                     config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
                     config.focusMode = Config.FocusMode.AUTO
                     set30fpsForPixel3(session)
