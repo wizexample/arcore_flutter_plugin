@@ -18,11 +18,8 @@ class NodeFactory {
 
                 (flutterNode.dartType == "ARCoreVideoNode") -> {
                     flutterNode.shape?.materials?.first()?.let { material ->
-                        material.videoPath?.let { videoPath ->
-                            // creates video node after confirming material and videoPath are not null.
-                            val node = VideoNode(context, flutterNode, material, videoPath)
-                            handler(node, null)
-                        }
+                        val node = VideoNode(context, flutterNode, material)
+                        handler(node, null)
                     }
                 }
                 (flutterNode.dartType == "ARCoreNode") -> {

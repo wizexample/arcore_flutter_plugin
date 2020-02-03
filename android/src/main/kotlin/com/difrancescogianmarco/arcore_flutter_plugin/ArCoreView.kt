@@ -12,6 +12,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreHitTestResult
+import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreMaterial
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCorePose
 import com.difrancescogianmarco.arcore_flutter_plugin.models.ARReferenceImage
@@ -227,7 +228,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         val method = call.method
         val args = call.arguments as? Map<*, *>
         println("onMethodCall $method $args")
-        debugNodeTree()
+//        debugNodeTree()
         when (call.method) {
             "init" -> {
                 arSceneViewInit(call, result, activity)
@@ -263,7 +264,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 loadMesh(textureBytes)
             }
             "dispose" -> {
-                Log.i(TAG, " updateMaterials")
+                Log.i(TAG, " dispose")
                 dispose()
             }
             "addImageRunWithConfigAndImage" -> {
@@ -458,10 +459,12 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 val isEnabled = !((map["isHidden"] as? Boolean) ?: true)
                 node.isEnabled = isEnabled
                 if (node is VideoNode) {
-                    if (!isEnabled) {
-                        node.video.player.pause()
-                    } else if (!node.video.player.isPlaying) {
-                        node.video.player.start()
+                    node.video?.player?.let { player ->
+                        if (!isEnabled) {
+                            player.pause()
+                        } else if (!player.isPlaying) {
+                            player.start()
+                        }
                     }
                 }
             })
@@ -476,9 +479,16 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         args?.let { map ->
             findNode(map["name"], { node ->
                 (map["materials"] as? ArrayList<HashMap<String, *>>)?.let { materials ->
-                    node.renderable?.material?.makeCopy()?.let { oldMaterial ->
-                        val material = MaterialCustomFactory.updateMaterial(oldMaterial, materials[0])
-                        node.renderable?.material = material
+                    if (node is VideoNode) {
+                        (materials[0] as? HashMap<String, *>)?.let {
+                            val material = FlutterArCoreMaterial(it)
+                            node.setMaterial(material)
+                        }
+                    } else {
+                        node.renderable?.material?.makeCopy()?.let { oldMaterial ->
+                            val material = MaterialCustomFactory.updateMaterial(oldMaterial, materials[0])
+                            node.renderable?.material = material
+                        }
                     }
                 }
             })

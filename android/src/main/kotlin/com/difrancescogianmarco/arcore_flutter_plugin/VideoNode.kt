@@ -1,18 +1,22 @@
 package com.difrancescogianmarco.arcore_flutter_plugin
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.media.MediaPlayer
 import android.net.Uri
+import android.widget.ImageView
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreMaterial
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
 import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.ExternalTexture
+import com.google.ar.sceneform.rendering.FixedWidthViewSizer
 import com.google.ar.sceneform.rendering.ModelRenderable
+import com.google.ar.sceneform.rendering.ViewRenderable
 import kotlin.math.min
 
-class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterArCoreMaterial,
-                videoPath: String) : Node() {
+class VideoNode(private val context: Context, private val params: FlutterArCoreNode,
+                material: FlutterArCoreMaterial) : Node() {
 
     companion object {
         val videos = HashMap<String, VideoTexture>()
@@ -22,9 +26,29 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
         }
     }
 
-    val video: VideoTexture
+    var video: VideoTexture? = null
+    val alterNode = Node()
 
     init {
+        setMaterial(material)
+        this.addChild(alterNode)
+
+        name = params.name
+        localPosition = params.position
+        localRotation = params.rotation
+    }
+
+
+    fun setMaterial(material: FlutterArCoreMaterial) {
+        material.videoPath?.let { videoPath ->
+            setVideoPath(material, videoPath)
+            alterNode.isEnabled = false
+        } ?: let {
+            setAlterNode(material)
+        }
+    }
+
+    private fun setVideoPath(material: FlutterArCoreMaterial, videoPath: String) {
         video = videos[videoPath] ?: let {
             val uri = Uri.parse(videoPath)
             println("uri: $uri")
@@ -34,31 +58,55 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
             videos[videoPath] = ret
             p.setSurface(ret.texture.surface)
             ret
-        }
-        ModelRenderable.builder()
-                .setSource(context, R.raw.slate)
-                .build()
-                .thenAccept { renderable ->
-                    renderable.material.setExternalTexture("videoTexture", video.texture)
-                    if (!video.player.isPlaying) {
-                        video.player.start()
+        }.also { myVideo ->
+            ModelRenderable.builder()
+                    .setSource(context, R.raw.slate)
+                    .build()
+                    .thenAccept { renderable ->
+                        renderable.material.setExternalTexture("videoTexture", myVideo.texture)
+                        if (!myVideo.player.isPlaying) {
+                            myVideo.player.start()
+                        }
+                        this.renderable = renderable
                     }
-                    this.renderable = renderable
+
+            myVideo.player.setOnPreparedListener { player ->
+                val vWidth = player.videoWidth
+                val vHeight = player.videoHeight
+                val scale = min((params.scale.x / vWidth), (params.scale.y / vHeight))
+                localScale = Vector3(scale * vWidth, scale * vHeight, 0.01f)
+                val pos = localPosition
+                pos.z += scale * vHeight / 2
+                localPosition = pos
+            }
+
+        }
+    }
+
+    private fun setAlterNode(material: FlutterArCoreMaterial) {
+        val bytes = material.textureBytes
+        val imagePath = material.imagePath
+
+        val image = when {
+            (bytes != null) -> {
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            }
+            (imagePath != null) -> {
+                BitmapFactory.decodeFile(imagePath)
+            }
+            else -> null
+        } ?: return
+        val imageView = ImageView(context)
+        imageView.setImageBitmap(image)
+        val sizer = FixedWidthViewSizer(1.0f)
+        ViewRenderable.builder()
+                .setView(context, imageView)
+                .setSizer(sizer)
+                .build().thenAccept { renderable ->
+                    renderable.verticalAlignment = ViewRenderable.VerticalAlignment.CENTER
+                    alterNode.renderable = renderable
                 }
 
-        video.player.setOnPreparedListener { player ->
-            val vWidth = player.videoWidth
-            val vHeight = player.videoHeight
-            val scale = min((params.scale.x / vWidth), (params.scale.y / vHeight))
-            localScale = Vector3(scale * vWidth, scale * vHeight, 0.01f)
-            val pos = localPosition
-            pos.z += scale * vHeight / 2
-            localPosition = pos
-        }
-
-        name = params.name
-        localPosition = params.position
-        localRotation = params.rotation
     }
 
 }

@@ -16,7 +16,8 @@ class FlutterArCoreMaterial(map: HashMap<*, *>) {
     val color = argb?.let { Color.argb(argb[0], argb[1], argb[2], argb[3]) }
     val imagePath = diffuse?.get("image") as? String
     val imageUrl = diffuse?.get("url") as? String
-    val textureBytes = diffuse?.get("pixelData") as? ByteArray
+    private val pixelData = diffuse?.get("pixelData") as? Map<*, *>
+    val textureBytes = pixelData?.get("data") as? ByteArray
 
     private val videoMap = diffuse?.get("videoProperty") as? Map<*, *>
     val isPlaying = videoMap?.get("isPlay") as? Boolean ?: false
@@ -38,6 +39,7 @@ class FlutterArCoreMaterial(map: HashMap<*, *>) {
                 "textureBytesLength: ${textureBytes?.size}\n" +
                 "metallic: $metallic\n" +
                 "roughness: $roughness\n" +
-                "reflectance: $reflectance"
+                "reflectance: $reflectance\n" +
+                "video: $videoMap"
     }
 }
