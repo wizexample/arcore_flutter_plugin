@@ -51,6 +51,9 @@ class VideoNode(context: Context, params: FlutterArCoreNode, material: FlutterAr
             val vHeight = player.videoHeight
             val scale = min((params.scale.x / vWidth), (params.scale.y / vHeight))
             localScale = Vector3(scale * vWidth, scale * vHeight, 0.01f)
+            val pos = localPosition
+            pos.z += scale * vHeight / 2
+            localPosition = pos
         }
 
         name = params.name

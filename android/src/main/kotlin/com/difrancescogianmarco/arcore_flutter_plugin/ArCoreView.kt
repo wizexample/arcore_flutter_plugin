@@ -139,12 +139,12 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                         methodChannel.invokeMethod("didAddNodeForAnchor", map)
 
                         // test renderable
-//                        MaterialFactory.makeOpaqueWithColor(context, Color(android.graphics.Color.BLUE))
+//                        MaterialFactory.makeTransparentWithColor(context, com.google.ar.sceneform.rendering.Color(Color.argb(0x33, 0x00, 0x00, 0xff)))
 //                                .thenAccept {
-//                                    val r = ShapeFactory.makeSphere(0.1f, Vector3(0.0f, 0.15f, 0.0f), it)
+//                                    val r = ShapeFactory.makeCube(Vector3(augmentedImage.extentX, 0.01f, augmentedImage.extentZ), Vector3(0.0f, 0.0f, 0.0f), it)
 //                                    val testNode = Node()
 //                                    testNode.renderable = r
-//                                    node.addChild(testNode)
+//                                    anchorNode.addChild(testNode)
 //                                }
                     }
                 }
