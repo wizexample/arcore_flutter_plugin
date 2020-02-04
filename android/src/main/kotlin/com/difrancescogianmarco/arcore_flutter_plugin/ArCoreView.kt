@@ -360,8 +360,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
     private fun arSceneViewInit(call: MethodCall, result: MethodChannel.Result, context: Context) {
         Log.i(TAG, "arSceneViewInit")
-        val enableTapRecognizer: Boolean? = call.argument("enableTapRecognizer")
-        if (enableTapRecognizer != null && enableTapRecognizer) {
+        val enableTapRecognizer = call.argument("enableTapRecognizer") as? Boolean ?: false
+        if (enableTapRecognizer) {
             arSceneView
                     ?.scene
                     ?.setOnTouchListener { hitTestResult: HitTestResult, event: MotionEvent? ->

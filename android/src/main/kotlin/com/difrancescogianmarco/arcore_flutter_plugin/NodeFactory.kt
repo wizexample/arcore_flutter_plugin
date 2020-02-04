@@ -15,7 +15,6 @@ class NodeFactory {
         fun makeNode(context: Context, flutterNode: FlutterArCoreNode, handler: NodeHandler) {
             Log.i(TAG, flutterNode.toString())
             when {
-
                 (flutterNode.dartType == "ARCoreVideoNode") -> {
                     flutterNode.shape?.materials?.first()?.let { material ->
                         val node = VideoNode(context, flutterNode, material)

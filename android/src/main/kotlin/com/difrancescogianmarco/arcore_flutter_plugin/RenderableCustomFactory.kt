@@ -82,7 +82,13 @@ class RenderableCustomFactory {
                     BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                 }
                 (imagePath != null) -> {
-                    BitmapFactory.decodeFile(imagePath)
+                    if (imagePath.startsWith("assets")) {
+                        context.resources.assets.open("flutter_assets/$imagePath").use { bis ->
+                            BitmapFactory.decodeStream(bis)
+                        }
+                    } else {
+                        BitmapFactory.decodeFile(imagePath)
+                    }
                 }
                 else -> null
             } ?: return
