@@ -21,7 +21,7 @@ class NodeFactory {
                         handler(node, null)
                     }
                 }
-                (flutterNode.dartType == "ARCoreNode") -> {
+                (flutterNode.dartType == "ARCoreNode" && flutterNode.shape == null) -> {
                     handler(flutterNode.buildNode(), null)
                 }
                 else -> {
