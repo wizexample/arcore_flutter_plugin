@@ -64,7 +64,7 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
                     .build()
                     .thenAccept { renderable ->
                         renderable.material.setExternalTexture("videoTexture", myVideo.texture)
-                        if (!myVideo.player.isPlaying) {
+                        if (!myVideo.player.isPlaying && this.isEnabled) {
                             myVideo.player.start()
                         }
                         this.renderable = renderable
