@@ -601,9 +601,12 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         if (arSceneView != null) {
             arSceneView?.pause()
         }
+        VideoNode.pause()
     }
 
     fun onDestroy() {
+        (context.applicationContext as FlutterApplication).currentActivity.application
+                .unregisterActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
         VideoNode.dispose()
 
         if (arSceneView != null) {

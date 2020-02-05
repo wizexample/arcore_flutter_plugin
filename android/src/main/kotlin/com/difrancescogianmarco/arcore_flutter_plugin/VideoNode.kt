@@ -24,6 +24,10 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
             videos.forEach { (_, v) -> v.player.release() }
             videos.clear()
         }
+
+        fun pause() {
+            videos.forEach { (_, v) -> v.player.pause() }
+        }
     }
 
     var video: VideoTexture? = null
