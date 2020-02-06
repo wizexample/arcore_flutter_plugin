@@ -93,12 +93,13 @@ class RenderableCustomFactory {
                 else -> null
             } ?: return
 
-            var sizer: ViewSizer? = null
+            var sizer: ViewSizer = FixedWidthViewSizer(1f)
             (shape.params["side"] as? String)?.let {
                 val size = (shape.params["size"] as? Number ?: 1.0).toFloat()
                 when (it) {
-                    "FixedSide.WIDTH" -> sizer = FixedWidthViewSizer(size)
-                    "FixedSide.HEIGHT" -> sizer = FixedHeightViewSizer(size)
+                    "FIXED_WIDTH" -> sizer = FixedWidthViewSizer(size)
+                    "FIXED_HEIGHT" -> sizer = FixedHeightViewSizer(size)
+                    "DP_TO_METERS" -> sizer = DpToMetersViewSizer(size.toInt())
                 }
             }
 

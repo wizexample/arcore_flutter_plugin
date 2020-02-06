@@ -8,6 +8,7 @@ import android.widget.ImageView
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreMaterial
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
 import com.google.ar.sceneform.Node
+import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.ExternalTexture
 import com.google.ar.sceneform.rendering.FixedWidthViewSizer
@@ -35,11 +36,18 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
 
     init {
         setMaterial(material)
+        alterNode.name = "videoAlterNode"
         this.addChild(alterNode)
 
         name = params.name
         localPosition = params.position
-        localRotation = params.rotation
+
+        params.eulerAngles?.let {
+            val v = Vector3(Math.toDegrees(it.x.toDouble()).toFloat(), Math.toDegrees(it.y.toDouble()).toFloat(), Math.toDegrees(it.z.toDouble()).toFloat())
+            localRotation = Quaternion.eulerAngles(v)
+        } ?: let {
+            localRotation = params.rotation
+        }
     }
 
 
@@ -80,7 +88,7 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
                 val scale = min((params.scale.x / vWidth), (params.scale.y / vHeight))
                 localScale = Vector3(scale * vWidth, scale * vHeight, 0.01f)
                 val pos = localPosition
-                pos.z += scale * vHeight / 2
+                pos.y -= scale * vHeight / 2
                 localPosition = pos
             }
 

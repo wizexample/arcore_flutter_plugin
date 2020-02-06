@@ -9,7 +9,8 @@ import com.google.ar.sceneform.math.Vector3
 class FlutterArCoreNode(map: Map<*, *>) {
     val name = map["name"] as String
     val scale = parseVector3(map["scale"] as? HashMap<*, *>) ?: Vector3.one()
-    val eulerAngles = parseVector3(map["eulerAngles"] as? HashMap<*, *>) ?: Vector3.zero()
+    private val eulerMap = map["eulerAngles"] as? HashMap<*, *>
+    val eulerAngles = eulerMap?.let { parseVector3(it) }
     val position = parseVector3(map["position"] as? HashMap<*, *>) ?: Vector3.zero()
     var parentNodeName: String? = map["parentNodeName"] as? String
     val dartType: String = map["dartType"] as String
@@ -20,7 +21,7 @@ class FlutterArCoreNode(map: Map<*, *>) {
     val obcject3DFileName: String? = map["obcject3DFileName"] as? String
             ?: map["localPath"] as? String
     val shape: FlutterArCoreShape? = getShape(map["geometry"] as? HashMap<*, *>)
-    val rotation: Quaternion = parseQuaternion(map["rotation"] as? HashMap<*, *>)
+    var rotation: Quaternion = parseQuaternion(map["rotation"] as? HashMap<*, *>)
             ?: Quaternion()
 
     val children: ArrayList<FlutterArCoreNode> = getChildrenFromMap(map["children"] as? ArrayList<HashMap<*, *>>)
@@ -39,20 +40,16 @@ class FlutterArCoreNode(map: Map<*, *>) {
         node.name = name
         node.localPosition = position
         node.localScale = scale
-        node.localRotation = rotation
+
+        eulerAngles?.let {
+            val v = Vector3(Math.toDegrees(it.x.toDouble()).toFloat(), Math.toDegrees(it.y.toDouble()).toFloat(), Math.toDegrees(it.z.toDouble()).toFloat())
+            node.localRotation = Quaternion.eulerAngles(v)
+        } ?: let {
+            node.localRotation = rotation
+        }
 
         return node
     }
-
-
-    fun getPosition(): FloatArray {
-        return floatArrayOf(position.x, position.y, position.z)
-    }
-
-    fun getRotation(): FloatArray {
-        return floatArrayOf(rotation.x, rotation.y, rotation.z, rotation.w)
-    }
-
 
     private fun getShape(map: HashMap<*, *>?): FlutterArCoreShape? {
         if (map != null) {
