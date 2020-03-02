@@ -269,6 +269,14 @@ class ArCoreController {
     return values;
   }
 
+  void screenCapture() {
+    _channel.invokeMethod<void>('screenCapture');
+  }
+
+  void screenRecord() {
+    _channel.invokeMethod<void>('toggleScreenRecord');
+  }
+
   void dispose() {
     _channel?.invokeMethod<void>('dispose');
   }

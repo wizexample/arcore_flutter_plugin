@@ -3,12 +3,16 @@ package com.difrancescogianmarco.arcore_flutter_plugin
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.os.Handler
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.PixelCopy
 import android.view.View
 import android.widget.Toast
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreHitTestResult
@@ -18,6 +22,7 @@ import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCo
 import com.difrancescogianmarco.arcore_flutter_plugin.models.ARReferenceImage
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.ArCoreUtils
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.DecodableUtils
+import com.difrancescogianmarco.arcore_flutter_plugin.utils.VideoRecorder
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.UnavailableException
@@ -32,6 +37,8 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
+import java.io.File
+import java.io.FileOutputStream
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -51,6 +58,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private val RC_PERMISSIONS = 0x123
     private var sceneUpdateListener: Scene.OnUpdateListener
     private var faceSceneUpdateListener: Scene.OnUpdateListener
+    private var recorder: VideoRecorder? = null
 
     //AUGMENTEDFACE
     private var faceRegionsRenderable: ModelRenderable? = null
@@ -76,9 +84,11 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
 
         methodChannel.setMethodCallHandler(this)
-        arSceneView = ArSceneView(context)
+        val sceneView = ArSceneView(context)
+        arSceneView = sceneView
+        recorder = VideoRecorder(sceneView)
         objectsParent.name = "objectsParent"
-        arSceneView?.scene?.addChild(objectsParent)
+        sceneView.scene?.addChild(objectsParent)
 
         // Set up a tap gesture detector.
         gestureDetector = GestureDetector(
@@ -228,7 +238,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         val method = call.method
         val args = call.arguments as? Map<*, *>
         println("onMethodCall $method $args")
-//        debugNodeTree()
+        debugNodeTree()
         when (call.method) {
             "init" -> {
                 arSceneViewInit(call, result, activity)
@@ -290,6 +300,20 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 println("startWorldTrackingSessionWithImage")
                 isReady = true
                 onResume()
+            }
+            "screenCapture" -> {
+                screenCapture(args, result)
+            }
+            "toggleScreenRecord" -> {
+                val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "mov.mp4")
+                recorder?.toggleRecord(f.absolutePath)
+            }
+            "startScreenRecord" -> {
+                val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "mov.mp4")
+                recorder?.startRecord(f.absolutePath)
+            }
+            "stopScreenRecord" -> {
+                recorder?.stopRecord()
             }
             else -> {
             }
@@ -497,6 +521,29 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         result.success(null)
     }
 
+    private fun screenCapture(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            // TODO filename and its directory must be configured in arguments
+
+            arSceneView?.let { view ->
+                val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+
+                PixelCopy.request(view, bitmap, { copyResult ->
+                    if (copyResult == PixelCopy.SUCCESS) {
+                        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
+                        val filePath = File(dir, "share.png")
+                        FileOutputStream(filePath.absolutePath).use { fos ->
+                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
+                        }
+                    }
+                }, Handler())
+            }
+        }
+
+        result.success(null)
+    }
+
+
     private fun debugNodeTree(node: NodeParent? = arSceneView?.scene, level: Int = 0) {
         node?.children?.forEach {
             println("**** [$level] ${it.name} - ${it.localPosition} ${it.localScale} ${it.localRotation} ${it.javaClass}")
@@ -598,9 +645,12 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     fun onPause() {
-        if (arSceneView != null) {
-            arSceneView?.pause()
+        recorder?.let {
+            if (it.isRecording) {
+                it.stopRecord()
+            }
         }
+        arSceneView?.pause()
         VideoNode.pause()
     }
 
@@ -614,6 +664,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             arSceneView?.scene?.removeOnUpdateListener(faceSceneUpdateListener)
             arSceneView?.destroy()
             arSceneView = null
+            recorder = null
         }
     }
 

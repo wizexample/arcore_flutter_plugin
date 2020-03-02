@@ -26,7 +26,7 @@ class ArCoreView extends StatefulWidget {
     Key key,
     @required
         this.onArCoreViewCreated, //    @required this.onArCoreUnsupported,
-    this.config,
+    this.config = ARCoreSessionConfig.DEFAULT,
     this.enableTapRecognizer = false,
     this.enableUpdateListener = false,
     this.type = ArCoreViewType.STANDARD_VIEW,

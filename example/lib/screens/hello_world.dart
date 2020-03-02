@@ -24,8 +24,18 @@ class _HelloWorldState extends State<HelloWorld> {
         appBar: AppBar(
           title: const Text('Hello World'),
         ),
-        body: ArCoreView(
-          onArCoreViewCreated: _onArCoreViewCreated,
+        body: Stack(
+          children: <Widget>[
+            ArCoreView(
+              onArCoreViewCreated: _onArCoreViewCreated,
+            ),
+            RaisedButton(
+              child: Text("button"),
+              onPressed: () {
+                arCoreController.screenRecord();
+              },
+            )
+          ],
         ),
       ),
     );

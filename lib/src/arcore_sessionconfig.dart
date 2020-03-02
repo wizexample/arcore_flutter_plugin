@@ -1,8 +1,10 @@
 class ARCoreSessionConfig {
+  static const ARCoreSessionConfig DEFAULT = ARCoreSessionConfig(
+      planeFindingMode: PlaneFindingMode.HORIZONTAL_AND_VERTICAL);
   final PlaneFindingMode planeFindingMode;
 
   const ARCoreSessionConfig({
-    this.planeFindingMode,
+    this.planeFindingMode = PlaneFindingMode.HORIZONTAL_AND_VERTICAL,
   });
 
   Map<String, dynamic> toMap() => <String, dynamic>{
