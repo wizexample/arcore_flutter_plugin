@@ -23,6 +23,7 @@ class FlutterArCoreMaterial(map: HashMap<*, *>) {
     val isPlaying = videoMap?.get("isPlay") as? Boolean ?: false
     val isLooping = videoMap?.get("isLoop") as? Boolean ?: false
     val videoPath = videoMap?.get("videoPath") as? String
+    val chromaKeyColor = getArColor((videoMap?.get("chromaKeyColor") as? Number)?.toInt())
 
     private fun getIntColors(color: Long?): IntArray? {
         if (color == null) return null
@@ -32,6 +33,13 @@ class FlutterArCoreMaterial(map: HashMap<*, *>) {
         val b = (color and 0x000000FF).toInt()
 
         return intArrayOf(a, r, g, b)
+    }
+
+    private fun getArColor(color: Int?): com.google.ar.sceneform.rendering.Color? {
+        if (color == null) return null
+        return com.google.ar.sceneform.rendering.Color().apply {
+            set(color)
+        }
     }
 
     override fun toString(): String {
