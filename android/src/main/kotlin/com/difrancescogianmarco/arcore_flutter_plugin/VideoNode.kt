@@ -4,7 +4,9 @@ import android.content.Context
 import android.graphics.BitmapFactory
 import android.media.MediaPlayer
 import android.net.Uri
+import android.os.Build
 import android.widget.ImageView
+import androidx.annotation.RequiresApi
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreMaterial
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
 import com.google.ar.sceneform.Node
@@ -16,6 +18,7 @@ import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.rendering.ViewRenderable
 import kotlin.math.min
 
+@RequiresApi(Build.VERSION_CODES.N)
 class VideoNode(private val context: Context, private val params: FlutterArCoreNode,
                 material: FlutterArCoreMaterial) : Node() {
 
@@ -76,6 +79,10 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
                     .build()
                     .thenAccept { renderable ->
                         renderable.material.setExternalTexture("videoTexture", myVideo.texture)
+                        material.chromaKeyColor?.let { chromaKeyColor ->
+                            renderable.material.setFloat4("keyColor", chromaKeyColor)
+                            renderable.material.setBoolean("enableChromaKey", true)
+                        }
                         if (!myVideo.player.isPlaying && this.isEnabled) {
                             myVideo.player.start()
                         }

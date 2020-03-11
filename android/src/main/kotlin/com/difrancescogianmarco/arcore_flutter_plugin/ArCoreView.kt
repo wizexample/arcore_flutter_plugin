@@ -7,7 +7,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.os.Handler
 import android.util.Log
 import android.view.GestureDetector
@@ -38,7 +37,6 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
-import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 import kotlin.collections.ArrayList
@@ -306,15 +304,14 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 screenCapture(args, result)
             }
             "toggleScreenRecord" -> {
-                val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "mov.mp4")
-                recorder?.toggleRecord(f.absolutePath)
+                toggleScreenRecord(args, result)
             }
             "startScreenRecord" -> {
-                val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "mov.mp4")
-                recorder?.startRecord(f.absolutePath)
+                startScreenRecord(args, result)
             }
             "stopScreenRecord" -> {
                 recorder?.stopRecord()
+                result.success(null)
             }
             else -> {
             }
@@ -524,23 +521,38 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
     private fun screenCapture(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
-            // TODO filename and its directory must be configured in arguments
-
-            arSceneView?.let { view ->
-                val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-
-                PixelCopy.request(view, bitmap, { copyResult ->
-                    if (copyResult == PixelCopy.SUCCESS) {
-                        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
-                        val filePath = File(dir, "share.png")
-                        FileOutputStream(filePath.absolutePath).use { fos ->
-                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
+            (map["path"] as? String)?.let { path ->
+                arSceneView?.let { view ->
+                    val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+                    PixelCopy.request(view, bitmap, { copyResult ->
+                        if (copyResult == PixelCopy.SUCCESS) {
+                            FileOutputStream(path).use { fos ->
+                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
+                            }
                         }
-                    }
-                }, Handler())
+                    }, Handler())
+                }
             }
         }
 
+        result.success(null)
+    }
+
+    private fun toggleScreenRecord(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            (map["path"] as? String)?.let { path ->
+                recorder?.toggleRecord(path)
+            }
+        }
+        result.success(null)
+    }
+
+    private fun startScreenRecord(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            (map["path"] as? String)?.let { path ->
+                recorder?.startRecord(path)
+            }
+        }
         result.success(null)
     }
 

@@ -269,12 +269,20 @@ class ArCoreController {
     return values;
   }
 
-  void screenCapture() {
-    _channel.invokeMethod<void>('screenCapture');
+  void screenCapture(String path) {
+    _channel.invokeMethod<void>('screenCapture', {'path': path});
   }
 
-  void screenRecord() {
-    _channel.invokeMethod<void>('toggleScreenRecord');
+  void toggleScreenRecord(String path) {
+    _channel.invokeMethod<void>('toggleScreenRecord', {'path': path});
+  }
+
+  void startScreenRecord(String path) {
+    _channel.invokeMethod<void>('startScreenRecord', {'path': path});
+  }
+
+  void stopScreenRecord() {
+    _channel.invokeMethod<void>('stopScreenRecord');
   }
 
   void dispose() {

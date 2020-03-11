@@ -32,7 +32,8 @@ class _HelloWorldState extends State<HelloWorld> {
             RaisedButton(
               child: Text("button"),
               onPressed: () {
-                arCoreController.screenRecord();
+                arCoreController
+                    .toggleScreenRecord('/storage/emulated/0/DCIM/test.mp4');
               },
             )
           ],
@@ -101,6 +102,7 @@ class _HelloWorldState extends State<HelloWorld> {
           videoPath: _localFilePath,
           isPlay: true,
           isLoop: true,
+          chromaKeyColor: Color.fromARGB(0xFF, 0xFF, 0xFF, 0xFF),
         ).toMap(),
       ))
     ]);

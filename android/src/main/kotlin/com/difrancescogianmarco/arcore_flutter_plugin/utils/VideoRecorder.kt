@@ -7,12 +7,6 @@ import android.view.Surface
 import com.google.ar.sceneform.SceneView
 
 class VideoRecorder(private val sceneView: SceneView) {
-    companion object {
-        private const val DEFAULT_BITRATE = 10000000
-        private const val DEFAULT_FRAMERATE = 30
-    }
-
-
     private var recorder = MediaRecorder()
     private var surface: Surface? = null
     var isRecording = false
