@@ -45,10 +45,29 @@ class _HelloWorldState extends State<HelloWorld> {
     arCoreController = controller;
 
     _addImageView(arCoreController);
+    _add3dObject(arCoreController);
+//
+//    _addSphere(arCoreController);
+//    _addCylindre(arCoreController);
+//    _addCube(arCoreController);
+  }
 
-    _addSphere(arCoreController);
-    _addCylindre(arCoreController);
-    _addCube(arCoreController);
+  Future _add3dObject(ArCoreController controller) async {
+    final dir = '/storage/emulated/0/DCIM/model';
+
+    ArCoreReferenceNode sfb = ArCoreReferenceNode(
+        obcject3DFileName: dir + '/Andy.sfb',
+        position: vector.Vector3(0, -0.5, -2));
+    controller.add(sfb);
+    ArCoreReferenceNode sfbA = ArCoreReferenceNode(
+        obcject3DFileName: dir + '/andy_dance.sfb',
+        position: vector.Vector3(0, 0.5, -2));
+    controller.add(sfbA);
+    ArCoreReferenceNode gltf = ArCoreReferenceNode(
+        url:
+            'https://raw.githubusercontent.com/google-ar/sceneform-android-sdk/master/samples/solarsystem/app/sampledata/models/Earth/Earth.gltf',
+        position: vector.Vector3(0.5, -0.5, -2));
+    controller.add(gltf);
   }
 
   Future _addImageView(ArCoreController controller) async {
@@ -87,9 +106,7 @@ class _HelloWorldState extends State<HelloWorld> {
     ]);
 
     final node = ARCoreVideoNode(
-      name: 'img',
-      geometry: shape,
-      position: initialPosition,
+      name: 'img', geometry: shape, position: initialPosition,
       scale: initialScale,
 //        rotation:
 //            vector.Vector4(rotation.x, rotation.y, rotation.z, rotation.w),

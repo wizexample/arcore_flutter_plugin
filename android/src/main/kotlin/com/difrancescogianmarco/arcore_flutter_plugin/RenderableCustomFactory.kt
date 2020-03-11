@@ -3,17 +3,21 @@ package com.difrancescogianmarco.arcore_flutter_plugin
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreShape
 import com.google.ar.sceneform.assets.RenderableSource
 import com.google.ar.sceneform.rendering.*
+import java.io.File
 
 typealias MaterialHandler = (Material?, Throwable?) -> Unit
 typealias RenderableHandler = (Renderable?, Throwable?) -> Unit
 
+@RequiresApi(value = Build.VERSION_CODES.N)
 class RenderableCustomFactory {
 
     companion object {
@@ -37,11 +41,26 @@ class RenderableCustomFactory {
 
         private fun makeReferenceRenderable(context: Context, flutterArCoreNode: FlutterArCoreNode, handler: RenderableHandler) {
             val url = flutterArCoreNode.objectUrl
-
             val localObject = flutterArCoreNode.obcject3DFileName
+            val uri = when {
+                url != null -> {
+                    Uri.parse(url)
+                }
+                localObject != null -> {
+                    Uri.fromFile(File(localObject))
+                }
+                else -> null
+            } ?: return
 
-            if (localObject != null) {
-                ModelRenderable.builder().setSource(context, Uri.parse(localObject))
+            val sourceType = when {
+                uri.path?.endsWith("gltf", true) ?: false -> RenderableSource.SourceType.GLTF2
+                uri.path?.endsWith("glb", true) ?: false -> RenderableSource.SourceType.GLB
+                else -> null
+            }
+            println("uri: $uri sourceType: $sourceType")
+
+            if (sourceType == null) {
+                ModelRenderable.builder().setSource(context, uri)
                         .build().thenAccept { renderable ->
                             handler(renderable, null)
                         }.exceptionally { throwable ->
@@ -49,25 +68,17 @@ class RenderableCustomFactory {
                             handler(null, throwable)
                             return@exceptionally null
                         }
-            } else if (url != null) {
-
-                val renderableSourceBuilder = RenderableSource.builder()
-                        .setSource(context, Uri.parse(url), RenderableSource.SourceType.GLTF2)
-                        .setScale(0.05f)
-                        .setRecenterMode(RenderableSource.RecenterMode.ROOT)
-
-                ModelRenderable.builder()
-                        .setSource(context, renderableSourceBuilder.build())
-//                        .setSource(context) { FileInputStream(File(url)) }
-                        .setRegistryId(url)
-                        .build()
-                        .thenAccept { renderable ->
+            } else {
+                ModelRenderable
+                        .builder()
+                        .setSource(context,
+                                RenderableSource.builder().setSource(context, uri, sourceType).build())
+                        .build().thenAccept { renderable ->
                             handler(renderable, null)
-                        }
-                        .exceptionally { throwable ->
+                        }.exceptionally { throwable ->
+                            Log.e(TAG, "Unable to load Renderable.", throwable)
                             handler(null, throwable)
-                            Log.i(TAG, "renderable error ${throwable.localizedMessage}")
-                            null
+                            return@exceptionally null
                         }
             }
         }

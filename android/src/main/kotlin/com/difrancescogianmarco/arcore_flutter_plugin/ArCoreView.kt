@@ -15,6 +15,7 @@ import android.view.MotionEvent
 import android.view.PixelCopy
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreHitTestResult
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreMaterial
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
@@ -43,7 +44,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-
+@RequiresApi(Build.VERSION_CODES.N)
 class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: Int,
                  private val arType: ARType, args: Any?) : PlatformView, MethodChannel.MethodCallHandler {
     private val methodChannel: MethodChannel = MethodChannel(messenger, "arcore_flutter_plugin_$id")
