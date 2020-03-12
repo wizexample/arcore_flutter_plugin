@@ -81,3 +81,8 @@ sceneform.asset('sampledata/ArcticFox_Posed.obj',
         'default',
         'sampledata/ArcticFox_Posed.sfa',
         'src/main/assets/ArcticFox_Posed')
+
+sceneform.asset('sampledata/slate.obj',
+        'sampledata/slate.mat',
+        'sampledata/slate.sfa',
+        '../../../android/src/main/res/raw/slate')
