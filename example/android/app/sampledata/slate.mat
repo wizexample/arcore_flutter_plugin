@@ -72,9 +72,9 @@ fragment {
             float vtop = color.a;
 
             float3 mask_color = texture(materialParams_videoTexture, float2(uv.x, uv.y  + 0.25 * vtop - 0.25 * step(vtop, 0.0))).rgb;
-            float d = abs(length(abs(keyColor - mask_color.rgb)));
+            float distance = abs(length(abs(keyColor - mask_color.rgb)));
             float edge0 = materialParams.threshold * (1.0 - materialParams.slope);
-            float alpha = smoothstep(edge0, materialParams.threshold, d) * step(uv.y, 0.75) * step(0.25, uv.y);
+            float alpha = smoothstep(edge0, materialParams.threshold, distance) * step(uv.y, 0.75) * step(0.25, uv.y);
 
             material.baseColor.rgba = float4(texture(materialParams_videoTexture, float2(uv.x, uv.y - 0.25 * vtop + 0.25 * step(vtop, 0.0))).rgb, alpha);
             material.baseColor.rgb = inverseTonemapSRGB(material.baseColor.rgb);

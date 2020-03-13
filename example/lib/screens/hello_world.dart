@@ -103,7 +103,7 @@ class _HelloWorldState extends State<HelloWorld> {
           videoPath: bunkatu,
           isPlay: true,
           isLoop: true,
-          chromaKeyColor: Color.fromARGB(0xFF, 0xFF, 0xFF, 0xFF),
+          chromaKeyColor: Color.fromARGB(0xFF, 0x00, 0x00, 0x00),
           enableHalfMask: true,
         ).toMap(),
       ))
