@@ -29,13 +29,24 @@ class _HelloWorldState extends State<HelloWorld> {
             ArCoreView(
               onArCoreViewCreated: _onArCoreViewCreated,
             ),
-            RaisedButton(
-              child: Text("button"),
-              onPressed: () {
-//                arCoreController.toggleScreenRecord('/storage/emulated/0/DCIM/test.mp4');
-                arCoreController.startAnimation('sfbAnim');
-              },
-            )
+            Row(
+              children: <Widget>[
+                RaisedButton(
+                  child: Text("start"),
+                  onPressed: () {
+                    arCoreController
+                        .startScreenRecord('/storage/emulated/0/DCIM/test.mp4');
+//                  arCoreController.startAnimation('sfbAnim');
+                  },
+                ),
+                RaisedButton(
+                  child: Text("stop"),
+                  onPressed: () {
+                    arCoreController.stopScreenRecord();
+                  },
+                )
+              ],
+            ),
           ],
         ),
       ),

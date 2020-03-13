@@ -33,6 +33,7 @@ class VideoRecorder(private val sceneView: SceneView) {
     }
 
     fun startRecord(videoPath: String) {
+        if (isRecording) return
         recorder.setVideoSource(MediaRecorder.VideoSource.SURFACE)
         recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
         recorder.setOutputFile(videoPath)
@@ -51,6 +52,7 @@ class VideoRecorder(private val sceneView: SceneView) {
     }
 
     fun stopRecord() {
+        if (!isRecording) return
         isRecording = false
 
         surface?.let { surface ->
