@@ -79,10 +79,20 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
                     .build()
                     .thenAccept { renderable ->
                         renderable.material.setExternalTexture("videoTexture", myVideo.texture)
-                        material.chromaKeyColor?.let { chromaKeyColor ->
-                            renderable.material.setFloat4("keyColor", chromaKeyColor)
-                            renderable.material.setBoolean("enableChromaKey", true)
+                        material.chromaKeyColor?.let {
+                            renderable.material.setFloat3("keyColor", it)
                         }
+                        when {
+                            material.enableChromaKey -> {
+                                renderable.material.setBoolean("enableChromaKey", true)
+                            }
+                            material.enableHalfMask -> {
+                                renderable.material.setBoolean("enableHalfMask", true)
+                            }
+                        }
+                        renderable.material.setFloat("threshold", material.keyingThreshold)
+                        renderable.material.setFloat("slope", material.keyingSlope)
+
                         if (!myVideo.player.isPlaying && this.isEnabled) {
                             myVideo.player.start()
                         }

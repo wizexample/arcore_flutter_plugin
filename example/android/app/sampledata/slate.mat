@@ -15,15 +15,24 @@ material {
         {
             "type" : "bool",
             "name" : "enableChromaKey",
+        },
+        {
+            "type" : "bool",
+            "name" : "enableHalfMask"
+        },
+        {
+            "type" : "float",
+            "name" : "threshold"
+        },
+        {
+            "type" : "float",
+            "name" : "slope"
         }
     ],
     "requires" : [
         "position",
         "uv0",
         "color"
-    ],
-    variables : [
-         eyeDirection
     ],
     "shadingModel" : "unlit",
     "blending" : "masked",
@@ -50,27 +59,27 @@ fragment {
         if (materialParams.enableChromaKey) {
             vec3 keyColor = materialParams.keyColor.rgb;
 
-            float threshold = 0.675;
-            float slope = 0.2;
-
             float distance = abs(length(abs(keyColor - color.rgb)));
-            float edge0 = threshold * (1.0 - slope);
-            float alpha = smoothstep(edge0, threshold, distance);
+            float edge0 = materialParams.threshold * (1.0 - materialParams.slope);
+            float alpha = smoothstep(edge0, materialParams.threshold, distance);
             color.rgb = desaturate(color.rgb, 1.0 - (alpha * alpha * alpha));
 
             material.baseColor.a = alpha;
             material.baseColor.rgb = inverseTonemapSRGB(color.rgb);
             material.baseColor.rgb *= material.baseColor.a;
+        } else if (materialParams.enableHalfMask) {
+            vec3 keyColor = materialParams.keyColor.rgb;
+            float vtop = color.a;
+
+            float3 mask_color = texture(materialParams_videoTexture, float2(uv.x, uv.y  + 0.25 * vtop - 0.25 * step(vtop, 0.0))).rgb;
+            float d = abs(length(abs(keyColor - mask_color.rgb)));
+            float edge0 = materialParams.threshold * (1.0 - materialParams.slope);
+            float alpha = smoothstep(edge0, materialParams.threshold, d) * step(uv.y, 0.75) * step(0.25, uv.y);
+
+            material.baseColor.rgba = float4(texture(materialParams_videoTexture, float2(uv.x, uv.y - 0.25 * vtop + 0.25 * step(vtop, 0.0))).rgb, alpha);
+            material.baseColor.rgb = inverseTonemapSRGB(material.baseColor.rgb);
         } else {
             material.baseColor.rgb = inverseTonemapSRGB(color.rgb);
         }
-    }
-}
-
-vertex {
-    void materialVertex(inout MaterialVertexInputs material) {
-        float3 p = getPosition().xyz;
-        float3 u = mulMat4x4Float3(getViewFromClipMatrix(), p).xyz;
-        material.eyeDirection.xyz = mulMat3x3Float3(getWorldFromViewMatrix(), u);
     }
 }

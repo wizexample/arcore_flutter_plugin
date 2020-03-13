@@ -23,6 +23,10 @@ class FlutterArCoreMaterial(map: HashMap<*, *>) {
     val isPlaying = videoMap?.get("isPlay") as? Boolean ?: false
     val isLooping = videoMap?.get("isLoop") as? Boolean ?: false
     val videoPath = videoMap?.get("videoPath") as? String
+    val enableChromaKey = videoMap?.get("enableChromaKey") as? Boolean ?: false
+    val enableHalfMask = videoMap?.get("enableHalfMask") as? Boolean ?: false
+    val keyingThreshold = (videoMap?.get("keyingThreshold") as? Number ?: 0.8).toFloat()
+    val keyingSlope = (videoMap?.get("keyingSlope") as? Number ?: 0.2).toFloat()
     val chromaKeyColor = getArColor((videoMap?.get("chromaKeyColor") as? Number)?.toInt())
 
     private fun getIntColors(color: Long?): IntArray? {

@@ -94,15 +94,17 @@ class _HelloWorldState extends State<HelloWorld> {
           "http://www9.nhk.or.jp/das/movie/D0002060/D0002060561_00000_V_000.mp4",
           _localFilePath);
     }
+    String bunkatu = '/storage/emulated/0/movies/bunkatu.mp4';
     print("filepath : $_localFilePath");
     ARCoreGeometry shape = ARCoreSlate(materials: [
       ARCoreMaterial(
           diffuse: ARCoreMaterialProperty(
         videoProperty: ARCoreVideoProperty(
-          videoPath: _localFilePath,
+          videoPath: bunkatu,
           isPlay: true,
           isLoop: true,
           chromaKeyColor: Color.fromARGB(0xFF, 0xFF, 0xFF, 0xFF),
+          enableHalfMask: true,
         ).toMap(),
       ))
     ]);

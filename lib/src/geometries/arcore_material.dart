@@ -36,19 +36,33 @@ class ARCoreMaterialProperty {
 }
 
 class ARCoreVideoProperty {
-  ARCoreVideoProperty(
-      {this.isPlay, this.isLoop, this.videoPath, this.chromaKeyColor});
+  ARCoreVideoProperty({
+    this.isPlay,
+    this.isLoop,
+    this.videoPath,
+    this.chromaKeyColor,
+    this.enableChromaKey,
+    this.enableHalfMask,
+    this.keyingThreshold,
+    this.keyingSlope,
+  });
 
   final bool isPlay;
   final bool isLoop;
   final String videoPath;
   final Color chromaKeyColor;
+  final bool enableChromaKey;
+  final bool enableHalfMask;
+  final double keyingThreshold;
+  final double keyingSlope;
 
   Map<String, dynamic> toMap() => <String, dynamic>{
         'isPlay': isPlay,
         'isLoop': isLoop,
         'videoPath': videoPath,
         'chromaKeyColor': chromaKeyColor?.value,
+        'enableChromaKey': enableChromaKey,
+        'enableHalfMask': enableHalfMask,
       }..removeWhere((String k, dynamic v) => v == null);
 }
 
