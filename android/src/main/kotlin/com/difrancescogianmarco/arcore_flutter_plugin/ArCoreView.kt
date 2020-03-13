@@ -577,7 +577,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 recorder?.toggleRecord(path)
             }
         }
-        result.success(null)
+        result.success(recorder?.isRecording == true)
     }
 
     private fun startScreenRecord(args: Map<*, *>?, result: MethodChannel.Result) {

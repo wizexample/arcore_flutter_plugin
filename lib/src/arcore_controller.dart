@@ -275,8 +275,8 @@ class ArCoreController {
     _channel.invokeMethod<bool>('screenCapture', {'path': path});
   }
 
-  void toggleScreenRecord(String path) {
-    _channel.invokeMethod<void>('toggleScreenRecord', {'path': path});
+  Future<bool> toggleScreenRecord(String path) {
+    return _channel.invokeMethod<bool>('toggleScreenRecord', {'path': path});
   }
 
   void startScreenRecord(String path) {
