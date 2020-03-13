@@ -42,6 +42,8 @@ class ArCoreController {
   ArCoreImageHandler onImageDetected;
   ArCoreImageHandler onAddNodeForAnchor;
 
+  static const int ANIMATION_REPEAT_INFINITE = -1;
+
   static const MethodChannel _prepareMethodChannel =
       MethodChannel('arcore_prepare_plugin');
 
@@ -270,7 +272,7 @@ class ArCoreController {
   }
 
   void screenCapture(String path) {
-    _channel.invokeMethod<void>('screenCapture', {'path': path});
+    _channel.invokeMethod<bool>('screenCapture', {'path': path});
   }
 
   void toggleScreenRecord(String path) {
@@ -283,6 +285,18 @@ class ArCoreController {
 
   void stopScreenRecord() {
     _channel.invokeMethod<void>('stopScreenRecord');
+  }
+
+  void startAnimation(
+    String nodeName, {
+    int repeatCount,
+    int animationIndex,
+  }) {
+    _channel.invokeMethod('startAnimation', {
+      'nodeName': nodeName,
+      'repeatCount': repeatCount,
+      'animationIndex': animationIndex,
+    });
   }
 
   void dispose() {

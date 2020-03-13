@@ -1,12 +1,15 @@
 package com.difrancescogianmarco.arcore_flutter_plugin
 
 import android.content.Context
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
 import com.google.ar.sceneform.Node
 
 typealias NodeHandler = (Node?, Throwable?) -> Unit
 
+@RequiresApi(Build.VERSION_CODES.N)
 class NodeFactory {
 
     companion object {

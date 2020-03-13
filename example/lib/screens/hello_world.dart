@@ -32,8 +32,8 @@ class _HelloWorldState extends State<HelloWorld> {
             RaisedButton(
               child: Text("button"),
               onPressed: () {
-                arCoreController
-                    .toggleScreenRecord('/storage/emulated/0/DCIM/test.mp4');
+//                arCoreController.toggleScreenRecord('/storage/emulated/0/DCIM/test.mp4');
+                arCoreController.startAnimation('sfbAnim');
               },
             )
           ],
@@ -57,17 +57,20 @@ class _HelloWorldState extends State<HelloWorld> {
     final dir = '/storage/emulated/0/DCIM/model';
 
     ArCoreReferenceNode sfb = ArCoreReferenceNode(
-        obcject3DFileName: dir + '/Andy.sfb',
-        position: vector.Vector3(0, -0.5, -2));
+      obcject3DFileName: dir + '/Andy.sfb',
+      position: vector.Vector3(0, -0.5, -2),
+    );
     controller.add(sfb);
     ArCoreReferenceNode sfbA = ArCoreReferenceNode(
-        obcject3DFileName: dir + '/andy_dance.sfb',
-        position: vector.Vector3(0, 0.5, -2));
+      name: 'sfbAnim',
+      obcject3DFileName: dir + '/andy_dance.sfb',
+      position: vector.Vector3(0, 0.5, -2),
+    );
     controller.add(sfbA);
     ArCoreReferenceNode gltf = ArCoreReferenceNode(
         url:
             'https://raw.githubusercontent.com/google-ar/sceneform-android-sdk/master/samples/solarsystem/app/sampledata/models/Earth/Earth.gltf',
-        position: vector.Vector3(0.5, -0.5, -2));
+        position: vector.Vector3(0.8, -0.5, -2));
     controller.add(gltf);
   }
 
@@ -110,10 +113,10 @@ class _HelloWorldState extends State<HelloWorld> {
     ]);
 
     final node = ARCoreVideoNode(
-      name: 'img', geometry: shape, position: initialPosition,
+      name: 'img',
+      geometry: shape,
+      position: initialPosition,
       scale: initialScale,
-//        rotation:
-//            vector.Vector4(rotation.x, rotation.y, rotation.z, rotation.w),
     );
     controller.add(node);
   }

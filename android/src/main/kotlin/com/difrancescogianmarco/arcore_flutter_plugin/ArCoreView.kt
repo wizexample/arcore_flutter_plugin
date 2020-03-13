@@ -28,6 +28,7 @@ import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.UnavailableException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 import com.google.ar.sceneform.*
+import com.google.ar.sceneform.animation.ModelAnimator
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.rendering.Texture
@@ -70,6 +71,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private val augmentedImageMap = HashMap<AugmentedImage, Node>()
 
     private val nodes = HashMap<String, Node>()
+    private val animatorsMap = HashMap<String, ModelAnimator>()
+
 
     init {
         println("args: $args")
@@ -311,7 +314,10 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             }
             "stopScreenRecord" -> {
                 recorder?.stopRecord()
-                result.success(null)
+                result.success(true)
+            }
+            "startAnimation" -> {
+                startAnimation(args, result)
             }
             else -> {
             }
@@ -432,6 +438,33 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         args?.let { map ->
             findNode(map["nodeName"], { node ->
                 objectsParent.removeChild(node)
+            })
+        }
+
+        result.success(null)
+    }
+
+    private fun startAnimation(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            findNode(map["nodeName"], { node ->
+                val nodeName = map["nodeName"] as String
+                if (animatorsMap[nodeName]?.isRunning == true) {
+                    return@findNode
+                }
+
+                (node.renderable as? ModelRenderable)?.let { renderable ->
+                    val animationCount = renderable.animationDataCount
+                    if (animationCount > 0) {
+                        val repeat = (map["repeatCount"] as? Number ?: 0).toInt()
+                        val i = (map["animationIndex"] as? Number ?: 0).toInt()
+                        val animationIndex = if (i > animationCount) 0 else i
+                        val data = renderable.getAnimationData(animationIndex)
+                        val animator = ModelAnimator(data, renderable)
+                        animator.repeatCount = repeat
+                        animator.start()
+                        animatorsMap[nodeName] = animator
+                    }
+                }
             })
         }
 
