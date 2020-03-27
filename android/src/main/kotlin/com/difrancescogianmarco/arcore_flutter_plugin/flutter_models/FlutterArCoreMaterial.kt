@@ -2,10 +2,7 @@ package com.difrancescogianmarco.arcore_flutter_plugin.flutter_models
 
 import android.graphics.Color
 
-class FlutterArCoreMaterial(map: HashMap<*, *>) {
-
-    //    val texture: String? = map["texture"] as? String
-//    val textureBytes: ByteArray? = map["textureBytes"] as? ByteArray
+class FlutterArCoreMaterial(map: Map<*, *>) {
     val metallic: Float? = (map["metallic"] as? Double)?.toFloat()
     val roughness: Float? = (map["roughness"] as? Double)?.toFloat()
     val reflectance: Float? = (map["reflectance"] as? Double)?.toFloat()

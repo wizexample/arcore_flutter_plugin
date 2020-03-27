@@ -1,9 +1,13 @@
 package com.difrancescogianmarco.arcore_flutter_plugin
 
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreMaterial
+import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.rendering.Color
 import com.google.ar.sceneform.rendering.Material
 import com.google.ar.sceneform.rendering.R
@@ -77,26 +81,52 @@ class MaterialCustomFactory {
             }
         }
 
-        fun updateMaterial(material: Material, map: HashMap<String, *>): Material {
-            val color = map[MATERIAL_COLOR] as? ArrayList<Int>
-            val metallic = (map[MATERIAL_METALLIC] as? Double)?.toFloat()
-            val roughness = (map[MATERIAL_ROUGHNESS] as? Double)?.toFloat()
-            val reflectance = (map[MATERIAL_REFLECTANCE] as? Double)?.toFloat()
+        fun updateMaterial(context: Context, node: Node, map: Map<String, *>) {
+            val mat = FlutterArCoreMaterial(map)
+            val imagePath = mat.imagePath
+            val imageUrl = mat.imageUrl
+            val textureBytes = mat.textureBytes
+            val color = mat.color
 
-            if (metallic != null) {
-                material.setFloat(MATERIAL_METALLIC, metallic)
-            }
-            if (roughness != null) {
-                material.setFloat(MATERIAL_ROUGHNESS, roughness)
-            }
-            if (reflectance != null) {
-                material.setFloat(MATERIAL_REFLECTANCE, reflectance)
-            }
-            if (color != null) {
-                material.setFloat3(MATERIAL_COLOR, getColor(map[MATERIAL_COLOR] as ArrayList<Int>))
-            }
+            val renderable = node.renderable ?: return
+            if (textureBytes != null || imagePath != null || imageUrl != null) {
+                var isPng = true
 
-            return material
+                val builder = Texture.builder()
+                when {
+                    textureBytes != null -> {
+                        val bitmap = BitmapFactory.decodeByteArray(textureBytes, 0, textureBytes.size)
+                                ?: return
+                        builder.setSource(bitmap)
+                    }
+                    imagePath != null -> {
+                        val bitmap = BitmapFactory.decodeFile(imagePath) ?: return
+                        builder.setSource(bitmap)
+                        isPng = imagePath.endsWith("png")
+                    }
+                    imageUrl != null -> {
+                        builder.setSource(context, Uri.parse(imageUrl))
+                        isPng = imageUrl.endsWith("png")
+                    }
+                }
+
+                builder.build().thenAccept { texture ->
+                    makeWithTexture(context, texture, isPng, mat)?.thenAccept { material ->
+                        renderable.material = material
+                    }?.exceptionally { throwable ->
+                        Log.i(RenderableCustomFactory.TAG, "texture error $throwable")
+                        return@exceptionally null
+                    }
+                }
+            } else if (color != null) {
+                makeWithColor(context, mat)
+                        ?.thenAccept { material: Material ->
+                            renderable.material = material
+                        }?.exceptionally { throwable ->
+                            Log.i(RenderableCustomFactory.TAG, "material error $throwable")
+                            return@exceptionally null
+                        }
+            }
         }
 
         private fun getColor(rgb: ArrayList<Int>): Color {

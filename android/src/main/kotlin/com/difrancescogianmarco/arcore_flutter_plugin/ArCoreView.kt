@@ -454,6 +454,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
                 (node.renderable as? ModelRenderable)?.let { renderable ->
                     val animationCount = renderable.animationDataCount
+                    println("animationCount: $animationCount")
                     if (animationCount > 0) {
                         val repeat = (map["repeatCount"] as? Number ?: 0).toInt()
                         val i = (map["animationIndex"] as? Number ?: 0).toInt()
@@ -540,10 +541,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                             node.setMaterial(material)
                         }
                     } else {
-                        node.renderable?.material?.makeCopy()?.let { oldMaterial ->
-                            val material = MaterialCustomFactory.updateMaterial(oldMaterial, materials[0])
-                            node.renderable?.material = material
-                        }
+                        MaterialCustomFactory.updateMaterial(context, node, materials[0])
                     }
                 }
             })

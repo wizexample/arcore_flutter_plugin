@@ -34,9 +34,9 @@ class _HelloWorldState extends State<HelloWorld> {
                 RaisedButton(
                   child: Text("start"),
                   onPressed: () {
-                    arCoreController
-                        .startScreenRecord('/storage/emulated/0/DCIM/test.mp4');
-//                  arCoreController.startAnimation('sfbAnim');
+//                    arCoreController
+//                        .startScreenRecord('/storage/emulated/0/DCIM/test.mp4');
+                    arCoreController.startAnimation('sfbAnim');
                   },
                 ),
                 RaisedButton(
@@ -68,13 +68,14 @@ class _HelloWorldState extends State<HelloWorld> {
     final dir = '/storage/emulated/0/DCIM/model';
 
     ArCoreReferenceNode sfb = ArCoreReferenceNode(
-      obcject3DFileName: dir + '/Andy.sfb',
-      position: vector.Vector3(0, -0.5, -2),
+      name: 'sfbAnim',
+      obcject3DFileName: dir + '/supla.sfb',
+      scale: vector.Vector3(0.2, 0.2, 0.2),
+      position: vector.Vector3(0, -0.5, -1),
     );
     controller.add(sfb);
     ArCoreReferenceNode sfbA = ArCoreReferenceNode(
-      name: 'sfbAnim',
-      obcject3DFileName: dir + '/andy_dance.sfb',
+      obcject3DFileName: dir + '/ri.sfb',
       position: vector.Vector3(0, 0.5, -2),
     );
     controller.add(sfbA);
