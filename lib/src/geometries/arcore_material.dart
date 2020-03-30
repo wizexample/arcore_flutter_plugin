@@ -63,6 +63,8 @@ class ARCoreVideoProperty {
         'chromaKeyColor': chromaKeyColor?.value,
         'enableChromaKey': enableChromaKey,
         'enableHalfMask': enableHalfMask,
+        'keyingThreshold': keyingThreshold,
+        'keyingSlope': keyingSlope,
       }..removeWhere((String k, dynamic v) => v == null);
 }
 
