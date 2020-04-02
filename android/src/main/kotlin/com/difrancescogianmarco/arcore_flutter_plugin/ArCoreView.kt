@@ -169,7 +169,11 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 //                                }
                                 val bitmap = affine(captured, ul, ur, bl, br)
                                 Texture.builder().setSource(bitmap).build().thenAccept { texture ->
-                                    nurie.node.renderable?.getMaterial(0)?.setTexture("baseColorMap", texture)
+                                    nurie.node.renderable?.let{r ->
+                                        for (i in 0 until r.submeshCount) {
+                                            r.getMaterial(i).setTexture("baseColorMap", texture)
+                                        }
+                                    }
                                 }
                             }
 
