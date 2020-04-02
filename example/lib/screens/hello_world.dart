@@ -16,6 +16,7 @@ class HelloWorld extends StatefulWidget {
 
 class _HelloWorldState extends State<HelloWorld> {
   ArCoreController arCoreController;
+  ArCoreReferenceNode kuruma;
 
   @override
   Widget build(BuildContext context) {
@@ -28,15 +29,16 @@ class _HelloWorldState extends State<HelloWorld> {
           children: <Widget>[
             ArCoreView(
               onArCoreViewCreated: _onArCoreViewCreated,
+              enableUpdateListener: true,
             ),
             Row(
               children: <Widget>[
                 RaisedButton(
                   child: Text("start"),
                   onPressed: () {
-//                    arCoreController
-//                        .startScreenRecord('/storage/emulated/0/DCIM/test.mp4');
-                    arCoreController.startAnimation('sfbAnim');
+                    arCoreController
+                        .startScreenRecord('/storage/emulated/0/DCIM/test.mp4');
+//                    arCoreController.startAnimation('sfbAnim');
                   },
                 ),
                 RaisedButton(
@@ -55,35 +57,49 @@ class _HelloWorldState extends State<HelloWorld> {
 
   void _onArCoreViewCreated(ArCoreController controller) {
     arCoreController = controller;
+    _addNurie(arCoreController);
 
-    _addImageView(arCoreController);
-    _add3dObject(arCoreController);
+//    _addImageView(arCoreController);
+//    _add3dObject(arCoreController);
+
+    arCoreController.startWorldTrackingSessionWithImage();
 //
 //    _addSphere(arCoreController);
 //    _addCylindre(arCoreController);
 //    _addCube(arCoreController);
   }
 
+  Future _addNurie(ArCoreController controller) async {
+    final dir = '/storage/emulated/0/DCIM/model';
+    kuruma = ArCoreReferenceNode(
+      name: 'sfbAnim',
+      object3DFileName: dir + '/supla4.sfb',
+      scale: vector.Vector3(0.05, 0.05, 0.05),
+      position: vector.Vector3(0, 0, 0),
+    );
+    controller.addNurie('nurie', 0.2, kuruma, filePath: dir + '/supra.png');
+  }
+
   Future _add3dObject(ArCoreController controller) async {
     final dir = '/storage/emulated/0/DCIM/model';
 
-    ArCoreReferenceNode sfb = ArCoreReferenceNode(
+    kuruma = ArCoreReferenceNode(
       name: 'sfbAnim',
-      obcject3DFileName: dir + '/supla.sfb',
+      object3DFileName: dir + '/supla4.sfb',
       scale: vector.Vector3(0.2, 0.2, 0.2),
       position: vector.Vector3(0, -0.5, -1),
     );
-    controller.add(sfb);
-    ArCoreReferenceNode sfbA = ArCoreReferenceNode(
-      obcject3DFileName: dir + '/ri.sfb',
-      position: vector.Vector3(0, 0.5, -2),
-    );
-    controller.add(sfbA);
-    ArCoreReferenceNode gltf = ArCoreReferenceNode(
-        url:
-            'https://raw.githubusercontent.com/google-ar/sceneform-android-sdk/master/samples/solarsystem/app/sampledata/models/Earth/Earth.gltf',
-        position: vector.Vector3(0.8, -0.5, -2));
-    controller.add(gltf);
+    controller.add(kuruma);
+//    ArCoreReferenceNode sfbA = ArCoreReferenceNode(
+//      object3DFileName: dir + '/ri.sfb',
+//      position: vector.Vector3(0, 0.5, -2),
+//    );
+//    controller.add(sfbA);
+//    ArCoreReferenceNode gltf = ArCoreReferenceNode(
+//        url:
+//            'https://raw.githubusercontent.com/google-ar/sceneform-android-sdk/master/samples/solarsystem/app/sampledata/models/Earth/Earth.gltf',
+//        position: vector.Vector3(0.8, -0.5, -2));
+//    controller.add(gltf);
   }
 
   Future _addImageView(ArCoreController controller) async {

@@ -41,7 +41,7 @@ class RenderableCustomFactory {
 
         private fun makeReferenceRenderable(context: Context, flutterArCoreNode: FlutterArCoreNode, handler: RenderableHandler) {
             val url = flutterArCoreNode.objectUrl
-            val localObject = flutterArCoreNode.obcject3DFileName
+            val localObject = flutterArCoreNode.object3DFileName
             val uri = when {
                 url != null -> {
                     Uri.parse(url)
@@ -62,6 +62,14 @@ class RenderableCustomFactory {
             if (sourceType == null) {
                 ModelRenderable.builder().setSource(context, uri)
                         .build().thenAccept { renderable ->
+//                            Texture
+//                                    .builder()
+//                                    .setSource(context, Uri.parse("/storage/emulated/0/DCIM/model/supra.png"))
+//                                    .setUsage(Texture.Usage.NORMAL)
+//                                    .build().thenAccept {
+//                                        renderable.getMaterial(0).setTexture("baseColorMap", it)
+//                                        handler(renderable, null)
+//                                    }
                             handler(renderable, null)
                         }.exceptionally { throwable ->
                             Log.e(TAG, "Unable to load Renderable.", throwable)

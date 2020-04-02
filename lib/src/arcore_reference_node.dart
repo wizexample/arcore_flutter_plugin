@@ -3,10 +3,10 @@ import 'package:vector_math/vector_math_64.dart';
 import 'arcore_node.dart';
 
 class ArCoreReferenceNode extends ARCoreNode {
-  final String obcject3DFileName;
+  final String object3DFileName;
   ArCoreReferenceNode({
     this.url,
-    this.obcject3DFileName,
+    this.object3DFileName,
     Vector3 position,
     Vector3 scale,
     Vector3 eulerAngles,
@@ -25,7 +25,7 @@ class ArCoreReferenceNode extends ARCoreNode {
 
   @override
   Map<String, dynamic> toMap() => <String, dynamic>{
-        'obcject3DFileName': this.obcject3DFileName,
+        'object3DFileName': this.object3DFileName,
         'url': url,
       }..addAll(super.toMap());
 }

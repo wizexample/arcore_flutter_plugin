@@ -130,6 +130,35 @@ class ArCoreController {
     return _channel.invokeMethod('removeARCoreNode', {'nodeName': nodeName});
   }
 
+  void addNurie(
+    String imageName,
+    double markerSizeMeter,
+    ARCoreNode node, {
+    int lengthInBytes,
+    Uint8List bytes,
+    String filePath,
+  }) {
+    bool paramsSatisfied = false;
+    Map map = {
+      'imageName': imageName,
+      'markerSizeMeter': markerSizeMeter,
+      'node': node.toMap(),
+    };
+    if (lengthInBytes != null && imageName != null) {
+      map['imageLength'] = lengthInBytes;
+      map['imageBytes'] = bytes;
+      paramsSatisfied = true;
+    }
+    if (filePath != null) {
+      map['filePath'] = filePath;
+      paramsSatisfied = true;
+    }
+
+    if (paramsSatisfied) {
+      _channel.invokeMethod<void>('addNurie', map);
+    }
+  }
+
   void addImageRunWithConfigAndImage(String imageName, double markerSizeMeter,
       {int lengthInBytes, Uint8List bytes, String filePath}) {
     bool paramsSatisfied = false;

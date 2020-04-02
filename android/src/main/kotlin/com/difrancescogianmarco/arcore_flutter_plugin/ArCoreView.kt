@@ -5,6 +5,8 @@ import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.graphics.PointF
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -20,6 +22,7 @@ import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCo
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCorePose
 import com.difrancescogianmarco.arcore_flutter_plugin.models.ARReferenceImage
+import com.difrancescogianmarco.arcore_flutter_plugin.models.NurieParams
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.ArCoreUtils
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.DecodableUtils
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.VideoRecorder
@@ -28,10 +31,11 @@ import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.UnavailableException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 import com.google.ar.sceneform.*
+import com.google.ar.sceneform.Camera
 import com.google.ar.sceneform.animation.ModelAnimator
 import com.google.ar.sceneform.math.Quaternion
-import com.google.ar.sceneform.rendering.ModelRenderable
-import com.google.ar.sceneform.rendering.Texture
+import com.google.ar.sceneform.math.Vector3
+import com.google.ar.sceneform.rendering.*
 import com.google.ar.sceneform.ux.AugmentedFaceNode
 import io.flutter.app.FlutterApplication
 import io.flutter.plugin.common.BinaryMessenger
@@ -42,12 +46,14 @@ import java.io.FileOutputStream
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import kotlin.math.min
 
 @RequiresApi(Build.VERSION_CODES.N)
 class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: Int,
                  private val arType: ARType, args: Any?) : PlatformView, MethodChannel.MethodCallHandler {
     private val methodChannel: MethodChannel = MethodChannel(messenger, "arcore_flutter_plugin_$id")
     private val activity: Activity = (context.applicationContext as FlutterApplication).currentActivity
+    private val mainHandler = Handler()
     lateinit var activityLifecycleCallbacks: Application.ActivityLifecycleCallbacks
     private var mUserRequestedInstall = true
     private val sessionConfig: ARCoreSessionConfig
@@ -69,6 +75,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private var augmentedImageDatabase: AugmentedImageDatabase? = null
     private var isReady = false
     private val augmentedImageMap = HashMap<AugmentedImage, Node>()
+    private val nurieParams = HashMap<String, NurieParams>()
 
     private val nodes = HashMap<String, Node>()
     private val animatorsMap = HashMap<String, ModelAnimator>()
@@ -107,16 +114,12 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 })
 
         sceneUpdateListener = Scene.OnUpdateListener { frameTime ->
-
             val frame = arSceneView?.arFrame ?: return@OnUpdateListener
-
             if (frame.camera.trackingState != TrackingState.TRACKING) {
                 return@OnUpdateListener
             }
 
             for (plane in frame.getUpdatedTrackables(Plane::class.java)) {
-//                if (plane.trackingState == TrackingState.TRACKING) {
-
                 val pose = plane.centerPose
                 val map: HashMap<String, Any> = HashMap()
                 map["visible"] = if (plane.trackingState == TrackingState.TRACKING) "true" else "false"
@@ -127,49 +130,74 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 map["extentZ"] = plane.extentZ
 
                 methodChannel.invokeMethod("onPlaneDetected", map)
-//                }
             }
             for (augmentedImage in frame.getUpdatedTrackables(AugmentedImage::class.java)) {
-//                if (augmentedImage.trackingState == TrackingState.TRACKING) {
-
                 val pose = augmentedImage.centerPose
                 val map: HashMap<String, Any> = HashMap()
+                val name = augmentedImage.name
                 map["visible"] = if (augmentedImage.trackingState == TrackingState.TRACKING) "true" else "false"
                 map["trackingState"] = augmentedImage.trackingState.name
                 map["centerPose"] = FlutterArCorePose(pose.translation, pose.rotationQuaternion).toHashMap()
                 map["extentX"] = augmentedImage.extentX
                 map["extentZ"] = augmentedImage.extentZ
-                map["nodeName"] = augmentedImage.name
-                map["markerName"] = augmentedImage.name
+                map["nodeName"] = name
+                map["markerName"] = name
                 map["trackingMethod"] = getTrackingMethod(augmentedImage.trackingMethod)
                 if (augmentedImage.trackingState == TrackingState.TRACKING) {
-                    if (!augmentedImageMap.containsKey(augmentedImage)) {
-                        val anchorNode = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
-                        anchorNode.name = augmentedImage.name
-                        objectsParent.addChild(anchorNode)
-                        nodes[anchorNode.name] = anchorNode
-                        augmentedImageMap[augmentedImage] = anchorNode
-                        methodChannel.invokeMethod("didAddNodeForAnchor", map)
+                    nurieParams[name]?.let { nurie ->
+                        if (!nurie.imageCaptured && augmentedImage.trackingMethod == AugmentedImage.TrackingMethod.FULL_TRACKING) {
+                            // capture
+                            nurie.imageCaptured = true
+                            println("**** centerPose: ${augmentedImage.centerPose}")
+                            println("**** extent: ${augmentedImage.extentX} ${augmentedImage.extentZ}")
+                            val translation = Vector3(augmentedImage.centerPose.tx(), augmentedImage.centerPose.ty(), augmentedImage.centerPose.tz())
+                            println("**** screen: ${sceneView.scene.camera.worldToScreenPoint(translation)}")
+                            val anchorNode = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
+                            anchorNode.name = augmentedImage.name
+                            nodes[anchorNode.name] = anchorNode
+                            anchorNode.addChild(nurie.node)
+                            objectsParent.addChild(anchorNode)
+                            val ul = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, -augmentedImage.extentX / 2, -augmentedImage.extentZ / 2)
+                            val ur = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, augmentedImage.extentX / 2, -augmentedImage.extentZ / 2)
+                            val bl = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, -augmentedImage.extentX / 2, augmentedImage.extentZ / 2)
+                            val br = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, augmentedImage.extentX / 2, augmentedImage.extentZ / 2)
+                            println ("**** $ul, $ur, $bl, $br")
 
-                        // test renderable
-//                        MaterialFactory.makeTransparentWithColor(context, com.google.ar.sceneform.rendering.Color(Color.argb(0x33, 0x00, 0x00, 0xff)))
-//                                .thenAccept {
-//                                    val r = ShapeFactory.makeCube(Vector3(augmentedImage.extentX, 0.01f, augmentedImage.extentZ), Vector3(0.0f, 0.0f, 0.0f), it)
-//                                    val testNode = Node()
-//                                    testNode.renderable = r
-//                                    anchorNode.addChild(testNode)
+                            capture(sceneView) { captured ->
+//                                FileOutputStream("/storage/emulated/0/DCIM/model/testout.png").use { fos ->
+//                                    captured.compress(Bitmap.CompressFormat.PNG, 100, fos)
 //                                }
+                                val bitmap = affine(captured, ul, ur, bl, br)
+                                Texture.builder().setSource(bitmap).build().thenAccept { texture ->
+                                    nurie.node.renderable?.getMaterial(0)?.setTexture("baseColorMap", texture)
+                                }
+                            }
+
+                            MaterialFactory.makeTransparentWithColor(context, Color(1.0f, 1.0f, 0f, 0.8f)).thenAccept { material ->
+                                val rect = Node()
+                                anchorNode.addChild(rect)
+                                rect.name = "rectNode"
+                                rect.renderable = ShapeFactory.makeCube(Vector3(augmentedImage.extentX / 1, 0f, augmentedImage.extentZ / 1), Vector3.zero(), material)
+                            }
+                        }
+                    } ?: let {
+                        if (!augmentedImageMap.containsKey(augmentedImage)) {
+                            val anchorNode = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
+                            anchorNode.name = augmentedImage.name
+                            objectsParent.addChild(anchorNode)
+                            nodes[anchorNode.name] = anchorNode
+                            augmentedImageMap[augmentedImage] = anchorNode
+                            methodChannel.invokeMethod("didAddNodeForAnchor", map)
+                        }
                     }
                 }
 
                 methodChannel.invokeMethod("onImageDetected", map)
-//                }
             }
         }
 
         faceSceneUpdateListener = Scene.OnUpdateListener { frameTime ->
             run {
-                //                if (faceRegionsRenderable == null || faceMeshTexture == null) {
                 if (faceMeshTexture == null) {
                     return@OnUpdateListener
                 }
@@ -208,12 +236,34 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         setupLifeCycle(context)
     }
 
+    private fun affine(bitmap: Bitmap, ul: PointF, ur: PointF, bl: PointF, br: PointF, width: Float = 500f, height: Float = 500f): Bitmap {
+        val origin = floatArrayOf(0f, 0f, bitmap.width.toFloat(), 0f, bitmap.width.toFloat(), bitmap.height.toFloat(), 0f, bitmap.height.toFloat())
+
+        val src = floatArrayOf(ul.x, ul.y, ur.x, ur.y, br.x, br.y, bl.x, bl.y)
+        val dst = floatArrayOf(0f, 0f, width, 0f, width, height, 0f, height)
+
+        val affine = Matrix()
+        affine.setPolyToPoly(src, 0, dst, 0, 4)
+        affine.mapPoints(origin)
+        println("origin -> ${origin.toList()}")
+        val temp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, affine, true)
+        val left = (-min(origin[0], origin[6])).toInt()
+        val top = (-min(origin[1], origin[3])).toInt()
+        return Bitmap.createBitmap(temp, left, top, width.toInt(), height.toInt())
+    }
+
     private fun getTrackingMethod(method: AugmentedImage.TrackingMethod): Int {
         return when (method) {
             AugmentedImage.TrackingMethod.FULL_TRACKING -> 1
             AugmentedImage.TrackingMethod.LAST_KNOWN_POSE -> 2
             else -> 0
         }
+    }
+
+    private fun getScreenPoint(camera: Camera, pose: Pose, x: Float, z: Float): PointF {
+        val arr = pose.transformPoint(floatArrayOf(x, 0f, z))
+        val point = camera.worldToScreenPoint(Vector3(arr[0], arr[1], arr[2]))
+        return PointF(point.x, point.y)
     }
 
     fun loadMesh(textureBytes: ByteArray?) {
@@ -280,23 +330,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 dispose()
             }
             "addImageRunWithConfigAndImage" -> {
-                (call.arguments as? Map<*, *>)?.let { map ->
-                    val imageName = map["imageName"] as? String ?: return
-                    val markerSizeMeter = (map["markerSizeMeter"] as? Number ?: 1).toFloat()
-                    val bitmap = (map["filePath"] as? String)?.let { filePath ->
-                        BitmapFactory.decodeFile(filePath)
-                    } ?: let {
-                        val bytes = (map["imageBytes"] as? ByteArray) ?: return
-                        val bytesLength = (map["imageLength"] as? Int) ?: return
-                        BitmapFactory.decodeByteArray(bytes, 0, bytesLength)
-                    }
-                    println("□■□■ addImageRunWithConfigAndImage $imageName")
-                    bitmap ?: let {
-                        println("addImageRunWithConfigAndImage bitmap not satisfied.")
-                        return
-                    }
-                    augmentedImageParams.add(ARReferenceImage(imageName, bitmap, markerSizeMeter))
-                }
+                addArMarker(args, result)
             }
             "startWorldTrackingSessionWithImage" -> {
                 println("startWorldTrackingSessionWithImage")
@@ -318,6 +352,9 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             }
             "startAnimation" -> {
                 startAnimation(args, result)
+            }
+            "addNurie" -> {
+                addNurie(args, result)
             }
             else -> {
             }
@@ -384,6 +421,56 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 methodChannel.invokeMethod("onPlaneTap", list)
             }
         }
+    }
+
+    private fun addNurie(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            val imageName = map["imageName"] as? String ?: return
+            val markerSizeMeter = (map["markerSizeMeter"] as? Number ?: 1).toFloat()
+            val flutterArCoreNode = FlutterArCoreNode(map["node"] as Map<*, *>)
+            val bitmap = (map["filePath"] as? String)?.let { filePath ->
+                BitmapFactory.decodeFile(filePath)
+            } ?: let {
+                val bytes = (map["imageBytes"] as? ByteArray) ?: return
+                val bytesLength = (map["imageLength"] as? Int) ?: return
+                BitmapFactory.decodeByteArray(bytes, 0, bytesLength)
+            }
+            println("□■□■ addNuriwe $imageName, $flutterArCoreNode")
+            bitmap ?: let {
+                println("addNuriwe bitmap not satisfied.")
+                return
+            }
+
+            NodeFactory.makeNode(activity.applicationContext, flutterArCoreNode) { node, _ ->
+                if (node != null) {
+                    nurieParams.put(imageName, NurieParams(imageName, node))
+                }
+            }
+
+            augmentedImageParams.add(ARReferenceImage(imageName, bitmap, markerSizeMeter))
+        }
+        result.success(null)
+    }
+
+    private fun addArMarker(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            val imageName = map["imageName"] as? String ?: return
+            val markerSizeMeter = (map["markerSizeMeter"] as? Number ?: 1).toFloat()
+            val bitmap = (map["filePath"] as? String)?.let { filePath ->
+                BitmapFactory.decodeFile(filePath)
+            } ?: let {
+                val bytes = (map["imageBytes"] as? ByteArray) ?: return
+                val bytesLength = (map["imageLength"] as? Int) ?: return
+                BitmapFactory.decodeByteArray(bytes, 0, bytesLength)
+            }
+            println("□■□■ addImageRunWithConfigAndImage $imageName")
+            bitmap ?: let {
+                println("addImageRunWithConfigAndImage bitmap not satisfied.")
+                return
+            }
+            augmentedImageParams.add(ARReferenceImage(imageName, bitmap, markerSizeMeter))
+        }
+        result.success(null)
     }
 
     private fun arSceneViewInit(call: MethodCall, result: MethodChannel.Result, context: Context) {
@@ -554,19 +641,34 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         args?.let { map ->
             (map["path"] as? String)?.let { path ->
                 arSceneView?.let { view ->
-                    val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-                    PixelCopy.request(view, bitmap, { copyResult ->
-                        if (copyResult == PixelCopy.SUCCESS) {
-                            FileOutputStream(path).use { fos ->
-                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
-                            }
+                    capture(view) { bitmap ->
+                        FileOutputStream(path).use { fos ->
+                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
                         }
-                    }, Handler())
+                    }
+//
+//                    val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+//                    PixelCopy.request(view, bitmap, { copyResult ->
+//                        if (copyResult == PixelCopy.SUCCESS) {
+//                            FileOutputStream(path).use { fos ->
+//                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
+//                            }
+//                        }
+//                    }, Handler())
                 }
             }
         }
 
         result.success(null)
+    }
+
+    private fun capture(sceneView: SceneView, method: (Bitmap) -> Unit) {
+        val bitmap = Bitmap.createBitmap(sceneView.width, sceneView.height, Bitmap.Config.ARGB_8888)
+        PixelCopy.request(sceneView, bitmap, { copyResult ->
+            if (copyResult == PixelCopy.SUCCESS) {
+                method(bitmap)
+            }
+        }, mainHandler)
     }
 
     private fun toggleScreenRecord(args: Map<*, *>?, result: MethodChannel.Result) {
@@ -590,7 +692,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
     private fun debugNodeTree(node: NodeParent? = arSceneView?.scene, level: Int = 0) {
         node?.children?.forEach {
-            println("**** [$level] ${it.name} - ${it.localPosition} ${it.localScale} ${it.localRotation} ${it.javaClass}")
+            println("**** [$level] ${it.name} - ${it.worldPosition} ${it.worldScale} ${it.worldRotation} ${it.javaClass}")
             debugNodeTree(it, level + 1)
         }
     }

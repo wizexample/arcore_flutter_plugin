@@ -7,7 +7,7 @@ import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 
 class FlutterArCoreNode(map: Map<*, *>) {
-    val name = map["name"] as String
+    val name = map["name"] as String?
     val scale = parseVector3(map["scale"] as? HashMap<*, *>) ?: Vector3.one()
     private val eulerMap = map["eulerAngles"] as? HashMap<*, *>
     val eulerAngles = eulerMap?.let { parseVector3(it) }
@@ -18,7 +18,7 @@ class FlutterArCoreNode(map: Map<*, *>) {
     val isHidden = map["isHidden"] as? Boolean ?: true
 
     val objectUrl: String? = map["objectUrl"] as? String ?: map["url"] as? String
-    val obcject3DFileName: String? = map["obcject3DFileName"] as? String
+    val object3DFileName: String? = map["object3DFileName"] as? String
             ?: map["localPath"] as? String
     val shape: FlutterArCoreShape? = getShape(map["geometry"] as? HashMap<*, *>)
     var rotation: Quaternion = parseQuaternion(map["rotation"] as? HashMap<*, *>)
@@ -62,7 +62,7 @@ class FlutterArCoreNode(map: Map<*, *>) {
         return "dartType: $dartType\n" +
                 "name: $name\n" +
                 "shape: ${shape.toString()}\n" +
-                "obcject3DFileName: $obcject3DFileName \n" +
+                "obcject3DFileName: $object3DFileName \n" +
                 "objectUrl: $objectUrl \n" +
                 "position: $position\n" +
                 "scale: $scale\n" +
