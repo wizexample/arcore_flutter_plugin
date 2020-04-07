@@ -34,7 +34,13 @@ class _HelloWorldState extends State<HelloWorld> {
             Row(
               children: <Widget>[
                 RaisedButton(
-                  child: Text("start"),
+                  child: Text("animation"),
+                  onPressed: () {
+                    arCoreController.startAnimation('sfbAnim');
+                  },
+                ),
+                RaisedButton(
+                  child: Text("record"),
                   onPressed: () {
                     arCoreController
                         .startScreenRecord('/storage/emulated/0/DCIM/test.mp4');
@@ -42,7 +48,7 @@ class _HelloWorldState extends State<HelloWorld> {
                   },
                 ),
                 RaisedButton(
-                  child: Text("stop"),
+                  child: Text("rec stop"),
                   onPressed: () {
                     arCoreController.stopScreenRecord();
                   },
@@ -59,8 +65,8 @@ class _HelloWorldState extends State<HelloWorld> {
     arCoreController = controller;
     _addNurie(arCoreController);
 
-//    _addImageView(arCoreController);
-//    _add3dObject(arCoreController);
+    _addImageView(arCoreController);
+    _add3dObject(arCoreController);
 
     arCoreController.startWorldTrackingSessionWithImage();
 //
@@ -73,7 +79,7 @@ class _HelloWorldState extends State<HelloWorld> {
     final dir = '/storage/emulated/0/DCIM/model';
     kuruma = ArCoreReferenceNode(
       name: 'sfbAnim',
-      object3DFileName: dir + '/supla4.sfb',
+      object3DFileName: dir + '/supla.sfb',
       scale: vector.Vector3(0.05, 0.05, 0.05),
       position: vector.Vector3(0, 0, 0),
     );
@@ -85,7 +91,7 @@ class _HelloWorldState extends State<HelloWorld> {
 
     kuruma = ArCoreReferenceNode(
       name: 'sfbAnim',
-      object3DFileName: dir + '/supla4.sfb',
+      object3DFileName: dir + '/supla.sfb',
       scale: vector.Vector3(0.2, 0.2, 0.2),
       position: vector.Vector3(0, -0.5, -1),
     );
