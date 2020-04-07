@@ -37,6 +37,9 @@ import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.*
 import com.google.ar.sceneform.ux.AugmentedFaceNode
+import com.google.ar.sceneform.ux.FootprintSelectionVisualizer
+import com.google.ar.sceneform.ux.TransformableNode
+import com.google.ar.sceneform.ux.TransformationSystem
 import io.flutter.app.FlutterApplication
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
@@ -76,9 +79,13 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private var isReady = false
     private val augmentedImageMap = HashMap<AugmentedImage, Node>()
     private val nurieParams = HashMap<String, NurieParams>()
+    private var nurieFindingMode = false
 
     private val nodes = HashMap<String, Node>()
     private val animatorsMap = HashMap<String, ModelAnimator>()
+    private val transformation: TransformationSystem
+
+    private var lastTappedPlane: HitResult? = null
 
 
     init {
@@ -90,16 +97,14 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             }
         }
         sessionConfig = tempConfig
-
+        transformation = makeTransformationSystem()
 
         methodChannel.setMethodCallHandler(this)
         val sceneView = ArSceneView(context)
         arSceneView = sceneView
         recorder = VideoRecorder(sceneView)
         objectsParent.name = "objectsParent"
-        sceneView.scene?.addChild(objectsParent)
 
-        // Set up a tap gesture detector.
         gestureDetector = GestureDetector(
                 context,
                 object : GestureDetector.SimpleOnGestureListener() {
@@ -112,6 +117,14 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                         return true
                     }
                 })
+
+
+        sceneView.scene?.apply {
+            addOnPeekTouchListener { hitTestResult, motionEvent ->
+                transformation.onTouch(hitTestResult, motionEvent)
+            }
+            addChild(objectsParent)
+        }
 
         sceneUpdateListener = Scene.OnUpdateListener { frameTime ->
             val frame = arSceneView?.arFrame ?: return@OnUpdateListener
@@ -144,47 +157,23 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 map["markerName"] = name
                 map["trackingMethod"] = getTrackingMethod(augmentedImage.trackingMethod)
                 if (augmentedImage.trackingState == TrackingState.TRACKING) {
-                    nurieParams[name]?.let { nurie ->
-                        if (!nurie.imageCaptured && augmentedImage.trackingMethod == AugmentedImage.TrackingMethod.FULL_TRACKING) {
-                            // capture
-                            nurie.imageCaptured = true
-                            println("**** centerPose: ${augmentedImage.centerPose}")
-                            println("**** extent: ${augmentedImage.extentX} ${augmentedImage.extentZ}")
-                            val translation = Vector3(augmentedImage.centerPose.tx(), augmentedImage.centerPose.ty(), augmentedImage.centerPose.tz())
-                            println("**** screen: ${sceneView.scene.camera.worldToScreenPoint(translation)}")
-                            val anchorNode = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
-                            anchorNode.name = augmentedImage.name
-                            nodes[anchorNode.name] = anchorNode
-                            anchorNode.addChild(nurie.node)
-                            objectsParent.addChild(anchorNode)
-                            val ul = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, -augmentedImage.extentX / 2, -augmentedImage.extentZ / 2)
-                            val ur = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, augmentedImage.extentX / 2, -augmentedImage.extentZ / 2)
-                            val bl = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, -augmentedImage.extentX / 2, augmentedImage.extentZ / 2)
-                            val br = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, augmentedImage.extentX / 2, augmentedImage.extentZ / 2)
-                            println ("**** $ul, $ur, $bl, $br")
+                    if (nurieFindingMode) {
+                        nurieParams[name]?.let { nurie ->
+                            if (augmentedImage.trackingMethod == AugmentedImage.TrackingMethod.FULL_TRACKING) {
+                                // capture
+                                val ul = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, -augmentedImage.extentX / 2, -augmentedImage.extentZ / 2)
+                                val ur = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, augmentedImage.extentX / 2, -augmentedImage.extentZ / 2)
+                                val bl = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, -augmentedImage.extentX / 2, augmentedImage.extentZ / 2)
+                                val br = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, augmentedImage.extentX / 2, augmentedImage.extentZ / 2)
 
-                            capture(sceneView) { captured ->
-//                                FileOutputStream("/storage/emulated/0/DCIM/model/testout.png").use { fos ->
-//                                    captured.compress(Bitmap.CompressFormat.PNG, 100, fos)
-//                                }
-                                val bitmap = affine(captured, ul, ur, bl, br)
-                                Texture.builder().setSource(bitmap).build().thenAccept { texture ->
-                                    nurie.node.renderable?.let{r ->
-                                        for (i in 0 until r.submeshCount) {
-                                            r.getMaterial(i).setTexture("baseColorMap", texture)
-                                        }
-                                    }
+                                capture(sceneView) { captured ->
+                                    val bitmap = affine(captured, ul, ur, bl, br)
+                                    nurie.image = bitmap
                                 }
-                            }
-
-                            MaterialFactory.makeTransparentWithColor(context, Color(1.0f, 1.0f, 0f, 0.8f)).thenAccept { material ->
-                                val rect = Node()
-                                anchorNode.addChild(rect)
-                                rect.name = "rectNode"
-                                rect.renderable = ShapeFactory.makeCube(Vector3(augmentedImage.extentX / 1, 0f, augmentedImage.extentZ / 1), Vector3.zero(), material)
+                                startFindingNurieMarker(false)
                             }
                         }
-                    } ?: let {
+                    } else {
                         if (!augmentedImageMap.containsKey(augmentedImage)) {
                             val anchorNode = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
                             anchorNode.name = augmentedImage.name
@@ -351,14 +340,22 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 startScreenRecord(args, result)
             }
             "stopScreenRecord" -> {
-                recorder?.stopRecord()
-                result.success(true)
+                stopScreenRecord(args, result)
             }
             "startAnimation" -> {
                 startAnimation(args, result)
             }
             "addNurie" -> {
                 addNurie(args, result)
+            }
+            "findNurieMarker" -> {
+                findNurieMarker(args, result)
+            }
+            "applyNurieTexture" -> {
+                applyNurieTexture(args, result)
+            }
+            "addTransformableNode" -> {
+                addTransformableNode(args, result)
             }
             else -> {
             }
@@ -406,6 +403,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private fun onSingleTap(tap: MotionEvent?) {
         Log.i(TAG, " onSingleTap")
         val frame = arSceneView?.arFrame
+        var tapped: HitResult? = null
         if (frame != null) {
             if (tap != null && frame.camera.trackingState == TrackingState.TRACKING) {
                 val hitList = frame.hitTest(tap)
@@ -420,18 +418,19 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                         val flutterArCoreHitTestResult = FlutterArCoreHitTestResult(distance, translation, rotation)
                         val arguments = flutterArCoreHitTestResult.toHashMap()
                         list.add(arguments)
+                        if (tapped == null) tapped = hit
                     }
                 }
                 methodChannel.invokeMethod("onPlaneTap", list)
             }
         }
+        lastTappedPlane = tapped
     }
 
     private fun addNurie(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
             val imageName = map["imageName"] as? String ?: return
             val markerSizeMeter = (map["markerSizeMeter"] as? Number ?: 1).toFloat()
-            val flutterArCoreNode = FlutterArCoreNode(map["node"] as Map<*, *>)
             val bitmap = (map["filePath"] as? String)?.let { filePath ->
                 BitmapFactory.decodeFile(filePath)
             } ?: let {
@@ -439,18 +438,13 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 val bytesLength = (map["imageLength"] as? Int) ?: return
                 BitmapFactory.decodeByteArray(bytes, 0, bytesLength)
             }
-            println("□■□■ addNuriwe $imageName, $flutterArCoreNode")
+            println("□■□■ addNurie $imageName")
             bitmap ?: let {
-                println("addNuriwe bitmap not satisfied.")
+                println("addNurie bitmap not satisfied.")
                 return
             }
 
-            NodeFactory.makeNode(activity.applicationContext, flutterArCoreNode) { node, _ ->
-                if (node != null) {
-                    nurieParams.put(imageName, NurieParams(imageName, node))
-                }
-            }
-
+            nurieParams[imageName] = NurieParams(imageName)
             augmentedImageParams.add(ARReferenceImage(imageName, bitmap, markerSizeMeter))
         }
         result.success(null)
@@ -484,7 +478,6 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             arSceneView
                     ?.scene
                     ?.setOnTouchListener { hitTestResult: HitTestResult, event: MotionEvent? ->
-
                         if (hitTestResult.node != null) {
                             Log.i(TAG, " onNodeTap " + hitTestResult.node?.name)
                             Log.i(TAG, hitTestResult.node?.localPosition.toString())
@@ -650,15 +643,6 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                             bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
                         }
                     }
-//
-//                    val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-//                    PixelCopy.request(view, bitmap, { copyResult ->
-//                        if (copyResult == PixelCopy.SUCCESS) {
-//                            FileOutputStream(path).use { fos ->
-//                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
-//                            }
-//                        }
-//                    }, Handler())
                 }
             }
         }
@@ -690,6 +674,65 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 recorder?.startRecord(path)
             }
         }
+        result.success(null)
+    }
+
+    private fun stopScreenRecord(args: Map<*, *>?, result: MethodChannel.Result) {
+        recorder?.stopRecord()
+        result.success(true)
+    }
+
+    private fun applyNurieTexture(args: Map<*, *>?, result: MethodChannel.Result) {
+        args?.let { map ->
+            val nurieStr = map["nurie"] as? String ?: return@let
+            val nurieParam = nurieParams[nurieStr] ?: return@let
+            val bitmap = nurieParam.image ?: return@let
+            findNode(map["nodeName"], { node ->
+                Texture.builder().setSource(bitmap).build().thenAccept { texture ->
+                    node.renderable?.let { r ->
+                        for (i in 0 until r.submeshCount) {
+                            r.getMaterial(i).setTexture("baseColorMap", texture)
+                        }
+                    }
+                }
+            })
+        }
+        result.success(null)
+    }
+
+    private fun findNurieMarker(args: Map<*, *>?, result: MethodChannel.Result) {
+        val isStart = args?.get("isStart") as? Boolean ?: true
+        startFindingNurieMarker(isStart)
+        result.success(null)
+    }
+
+    private fun startFindingNurieMarker(isStart: Boolean) {
+        nurieFindingMode = isStart
+        methodChannel.invokeMethod("didAddNodeForAnchor", mapOf("isStart" to isStart))
+        objectsParent.isEnabled = !isStart
+    }
+
+    private fun addTransformableNode(args: Map<*, *>?, result: MethodChannel.Result) {
+        lastTappedPlane?.let outer@{ plane ->
+            args?.let { map ->
+                val transformName = map["transformName"] as? String ?: return@outer
+                val params = map["node"] as? HashMap<*, *> ?: return@outer
+                nodes[transformName] ?: let {
+                    val anchor = plane.createAnchor()
+                    val anchorNode = AnchorNode(anchor)
+                    anchorNode.name = "$transformName-anchor"
+                    objectsParent.addChild(anchorNode)
+                    nodes[anchorNode.name] = anchorNode
+                    val transformableNode = TransformableNode(transformation)
+                    transformableNode.name = transformName
+                    anchorNode.addChild(transformableNode)
+                    nodes[transformableNode.name] = transformableNode
+                }
+
+                addNode(FlutterArCoreNode(params))
+            }
+        }
+
         result.success(null)
     }
 
@@ -850,11 +893,21 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         findNode(parentNodeName, { parentNode ->
             parentNode.addChild(node)
         }) {
+            println("attachNodeToParent cannot found parent name $parentNodeName")
             objectsParent.addChild(node)
         }
         nodes[node.name] = node
     }
 
+    private fun makeTransformationSystem(): TransformationSystem {
+        val selectionVisualizer = FootprintSelectionVisualizer()
+        val transformationSystem = TransformationSystem(context.resources.displayMetrics, selectionVisualizer)
+        MaterialFactory.makeTransparentWithColor(context, Color(1f, 0.5f, 0.5f, 0.3f)).thenAccept { mat ->
+            selectionVisualizer.footprintRenderable = ShapeFactory.makeCylinder(0.03f, 0.003f, Vector3.zero(), mat)
+        }
+
+        return transformationSystem
+    }
 
     /* private fun tryPlaceNode(tap: MotionEvent?, frame: Frame) {
         if (tap != null && frame.camera.trackingState == TrackingState.TRACKING) {

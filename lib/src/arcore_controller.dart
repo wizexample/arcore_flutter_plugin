@@ -132,8 +132,7 @@ class ArCoreController {
 
   void addNurie(
     String imageName,
-    double markerSizeMeter,
-    ARCoreNode node, {
+    double markerSizeMeter, {
     int lengthInBytes,
     Uint8List bytes,
     String filePath,
@@ -142,7 +141,6 @@ class ArCoreController {
     Map map = {
       'imageName': imageName,
       'markerSizeMeter': markerSizeMeter,
-      'node': node.toMap(),
     };
     if (lengthInBytes != null && imageName != null) {
       map['imageLength'] = lengthInBytes;
@@ -157,6 +155,23 @@ class ArCoreController {
     if (paramsSatisfied) {
       _channel.invokeMethod<void>('addNurie', map);
     }
+  }
+
+  void findNurieMarker(bool isStart) {
+    _channel.invokeMethod<void>('findNurieMarker', {'isStart': isStart});
+  }
+
+  void applyNurieTexture(String nodeName, String nurie) {
+    _channel.invokeMethod<void>(
+        'applyNurieTexture', {'nurie': nurie, 'nodeName': nodeName});
+  }
+
+  // need to call in onPlaneTap
+  void addTransformableNode(String transformName, ARCoreNode node) {
+    Map map = node.toMap();
+    map["parentNodeName"] = transformName;
+    _channel.invokeMethod<void>(
+        'addTransformableNode', {'transformName': transformName, 'node': map});
   }
 
   void addImageRunWithConfigAndImage(String imageName, double markerSizeMeter,

@@ -1,8 +1,8 @@
 package com.difrancescogianmarco.arcore_flutter_plugin.models
 
-import com.google.ar.sceneform.Node
+import android.graphics.Bitmap
 
-class NurieParams (val name: String, val node: Node) {
-    var imageCaptured = false
+class NurieParams(val name: String) {
+    var image: Bitmap? = null
     // todo マーカーとテクスチャの配置設定
 }

@@ -30,6 +30,7 @@ class _HelloWorldState extends State<HelloWorld> {
             ArCoreView(
               onArCoreViewCreated: _onArCoreViewCreated,
               enableUpdateListener: true,
+              enableTapRecognizer: true,
             ),
             Row(
               children: <Widget>[
@@ -51,6 +52,12 @@ class _HelloWorldState extends State<HelloWorld> {
                   child: Text("rec stop"),
                   onPressed: () {
                     arCoreController.stopScreenRecord();
+                  },
+                ),
+                RaisedButton(
+                  child: Text("nurie"),
+                  onPressed: () {
+                    arCoreController.findNurieMarker(true);
                   },
                 )
               ],
@@ -77,13 +84,26 @@ class _HelloWorldState extends State<HelloWorld> {
 
   Future _addNurie(ArCoreController controller) async {
     final dir = '/storage/emulated/0/DCIM/model';
-    kuruma = ArCoreReferenceNode(
-      name: 'sfbAnim',
-      object3DFileName: dir + '/supla.sfb',
-      scale: vector.Vector3(0.05, 0.05, 0.05),
-      position: vector.Vector3(0, 0, 0),
-    );
-    controller.addNurie('nurie', 0.2, kuruma, filePath: dir + '/supra.png');
+    controller.addNurie('nurie', 0.2, filePath: dir + '/supra.png');
+
+    arCoreController.onPlaneTap = _handleOnPlaneTap;
+    arCoreController.onNodeTap = (nodeName) {
+      arCoreController.applyNurieTexture(nodeName, 'nurie');
+    };
+  }
+
+  int id = 0;
+  void _handleOnPlaneTap(List<ArCoreHitTestResult> hits) {
+    final dir = '/storage/emulated/0/DCIM/model';
+    final hit = hits.first;
+    arCoreController.addTransformableNode(
+        "transformable-$id",
+        ArCoreReferenceNode(
+          name: 'node-$id',
+          object3DFileName: dir + '/supla.sfb',
+          scale: vector.Vector3(0.05, 0.05, 0.05),
+        ));
+    id++;
   }
 
   Future _add3dObject(ArCoreController controller) async {
