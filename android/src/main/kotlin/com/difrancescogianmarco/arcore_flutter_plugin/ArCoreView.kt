@@ -49,6 +49,7 @@ import java.io.FileOutputStream
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import kotlin.math.abs
 import kotlin.math.min
 
 @RequiresApi(Build.VERSION_CODES.N)
@@ -63,7 +64,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private val TAG: String = ArCoreView::class.java.name
     private var arSceneView: ArSceneView? = null
     private val objectsParent = Node()
-    private val gestureDetector: GestureDetector
+    private lateinit var gestureDetector: GestureDetector
     private val RC_PERMISSIONS = 0x123
     private var sceneUpdateListener: Scene.OnUpdateListener
     private var faceSceneUpdateListener: Scene.OnUpdateListener
@@ -78,8 +79,13 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private var augmentedImageDatabase: AugmentedImageDatabase? = null
     private var isReady = false
     private val augmentedImageMap = HashMap<AugmentedImage, Node>()
+
     private val nurieParams = HashMap<String, NurieParams>()
     private var nurieFindingMode = false
+    private val thresholdMarkerCorners = 10f
+    private val checkerMarkerCorners = 6
+    private val prevMarkerCorners = Array<PointF>(4) { PointF(0f, 0f) }
+    private var counterMarkerCorners = 0
 
     private val nodes = HashMap<String, Node>()
     private val animatorsMap = HashMap<String, ModelAnimator>()
@@ -105,24 +111,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         recorder = VideoRecorder(sceneView)
         objectsParent.name = "objectsParent"
 
-        gestureDetector = GestureDetector(
-                context,
-                object : GestureDetector.SimpleOnGestureListener() {
-                    override fun onSingleTapUp(e: MotionEvent): Boolean {
-                        onSingleTap(e)
-                        return true
-                    }
-
-                    override fun onDown(e: MotionEvent): Boolean {
-                        return true
-                    }
-                })
-
-
         sceneView.scene?.apply {
-            addOnPeekTouchListener { hitTestResult, motionEvent ->
-                transformation.onTouch(hitTestResult, motionEvent)
-            }
             addChild(objectsParent)
         }
 
@@ -166,11 +155,13 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                                 val bl = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, -augmentedImage.extentX / 2, augmentedImage.extentZ / 2)
                                 val br = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, augmentedImage.extentX / 2, augmentedImage.extentZ / 2)
 
-                                capture(sceneView) { captured ->
-                                    val bitmap = affine(captured, ul, ur, bl, br)
-                                    nurie.image = bitmap
+                                if (validMarkerCorners(sceneView.width, sceneView.height, ul, ur, bl, br)) {
+                                    capture(sceneView) { captured ->
+                                        val bitmap = affine(captured, ul, ur, bl, br)
+                                        nurie.image = bitmap
+                                    }
+                                    startFindingNurieMarker(false)
                                 }
-                                startFindingNurieMarker(false)
                             }
                         }
                     } else {
@@ -227,6 +218,25 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         // Lastly request CAMERA permission which is required by ARCore.
         ArCoreUtils.requestCameraPermission(activity, RC_PERMISSIONS)
         setupLifeCycle(context)
+    }
+
+    private fun validMarkerCorners(width: Number, height: Number, vararg corners: PointF): Boolean {
+        var succeed = true
+        for (i in 0 until 4) {
+            val corner = corners[i]
+            val prevCorner = prevMarkerCorners[i]
+            if (succeed && corner.x < 0 || corner.x > width.toFloat() || corner.y < 0 || corner.y > height.toFloat() ||
+                    abs(corner.x - prevCorner.x) > thresholdMarkerCorners || abs(corner.y - prevCorner.y) > thresholdMarkerCorners) {
+                succeed = false
+                counterMarkerCorners = -1
+            }
+            prevMarkerCorners[i] = corners[i]
+        }
+        if (++counterMarkerCorners >= checkerMarkerCorners) {
+            counterMarkerCorners = 0
+            return true
+        }
+        return false
     }
 
     private fun affine(bitmap: Bitmap, ul: PointF, ur: PointF, bl: PointF, br: PointF, width: Float = 500f, height: Float = 500f): Bitmap {
@@ -400,33 +410,6 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 .registerActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
     }
 
-    private fun onSingleTap(tap: MotionEvent?) {
-        Log.i(TAG, " onSingleTap")
-        val frame = arSceneView?.arFrame
-        var tapped: HitResult? = null
-        if (frame != null) {
-            if (tap != null && frame.camera.trackingState == TrackingState.TRACKING) {
-                val hitList = frame.hitTest(tap)
-                val list = ArrayList<HashMap<String, Any>>()
-                for (hit in hitList) {
-                    val trackable = hit.trackable
-                    if (trackable is Plane && trackable.isPoseInPolygon(hit.hitPose)) {
-                        hit.hitPose
-                        val distance: Float = hit.distance
-                        val translation = hit.hitPose.translation
-                        val rotation = hit.hitPose.rotationQuaternion
-                        val flutterArCoreHitTestResult = FlutterArCoreHitTestResult(distance, translation, rotation)
-                        val arguments = flutterArCoreHitTestResult.toHashMap()
-                        list.add(arguments)
-                        if (tapped == null) tapped = hit
-                    }
-                }
-                methodChannel.invokeMethod("onPlaneTap", list)
-            }
-        }
-        lastTappedPlane = tapped
-    }
-
     private fun addNurie(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
             val imageName = map["imageName"] as? String ?: return
@@ -473,6 +456,30 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
     private fun arSceneViewInit(call: MethodCall, result: MethodChannel.Result, context: Context) {
         Log.i(TAG, "arSceneViewInit")
+
+        gestureDetector = GestureDetector(
+                context,
+                object : GestureDetector.SimpleOnGestureListener() {
+                    override fun onSingleTapUp(e: MotionEvent): Boolean {
+                        onSingleTap(e)
+                        return true
+                    }
+
+                    override fun onDown(e: MotionEvent): Boolean {
+                        return true
+                    }
+                })
+
+        arSceneView?.scene?.addOnPeekTouchListener { hitTestResult, motionEvent ->
+            transformation.onTouch(hitTestResult, motionEvent)
+            if (hitTestResult.node != null) {
+                Log.i(TAG, " onNodeTap " + hitTestResult.node?.name)
+                Log.i(TAG, hitTestResult.node?.localPosition.toString())
+                Log.i(TAG, hitTestResult.node?.worldPosition.toString())
+                methodChannel.invokeMethod("onNodeTap", hitTestResult.node?.name)
+            }
+        }
+
         val enableTapRecognizer = call.argument("enableTapRecognizer") as? Boolean ?: false
         if (enableTapRecognizer) {
             arSceneView
@@ -497,6 +504,34 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         result.success(null)
     }
 
+    private fun onSingleTap(tap: MotionEvent?) {
+        Log.i(TAG, " onSingleTap")
+        val frame = arSceneView?.arFrame
+        var tapped: HitResult? = null
+        if (frame != null) {
+            if (tap != null && frame.camera.trackingState == TrackingState.TRACKING) {
+                val hitList = frame.hitTest(tap)
+                val list = ArrayList<HashMap<String, Any>>()
+                for (hit in hitList) {
+                    val trackable = hit.trackable
+                    if (trackable is Plane && trackable.isPoseInPolygon(hit.hitPose)) {
+                        hit.hitPose
+                        val distance: Float = hit.distance
+                        val translation = hit.hitPose.translation
+                        val rotation = hit.hitPose.rotationQuaternion
+                        val flutterArCoreHitTestResult = FlutterArCoreHitTestResult(distance, translation, rotation)
+                        val arguments = flutterArCoreHitTestResult.toHashMap()
+                        list.add(arguments)
+                        if (tapped == null) tapped = hit
+                    }
+                }
+                if (list.size > 0) {
+                    methodChannel.invokeMethod("onPlaneTap", list)
+                }
+            }
+        }
+        lastTappedPlane = tapped
+    }
 
     private fun findNode(name: Any?, exec: (node: Node) -> Unit, onNotFound: (() -> Unit)? = null) {
         var found = false
