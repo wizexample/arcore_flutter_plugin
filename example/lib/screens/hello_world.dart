@@ -90,6 +90,9 @@ class _HelloWorldState extends State<HelloWorld> {
     arCoreController.onNodeTap = (nodeName) {
       arCoreController.applyNurieTexture(nodeName, 'nurie');
     };
+    arCoreController.onNurieMarkerModeChanged = (b) {
+      print('onNurieMarkerModeChanged $b');
+    };
   }
 
   int id = 0;

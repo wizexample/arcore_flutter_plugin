@@ -41,6 +41,7 @@ class ArCoreController {
   ArCorePlaneHandler onPlaneDetected;
   ArCoreImageHandler onImageDetected;
   ArCoreImageHandler onAddNodeForAnchor;
+  Function(bool) onNurieMarkerModeChanged;
 
   static const int ANIMATION_REPEAT_INFINITE = -1;
 
@@ -109,6 +110,11 @@ class ArCoreController {
         if (enableUpdateListener && onAddNodeForAnchor != null) {
           final marker = ARCoreMarker.fromMap(call.arguments);
           onAddNodeForAnchor(marker);
+        }
+        break;
+      case 'nurieMarkerModeChanged':
+        if (onNurieMarkerModeChanged != null) {
+          onNurieMarkerModeChanged(call.arguments['isStart']);
         }
         break;
       default:

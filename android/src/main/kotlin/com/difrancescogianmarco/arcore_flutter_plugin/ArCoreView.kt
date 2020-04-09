@@ -230,7 +230,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 succeed = false
                 counterMarkerCorners = -1
             }
-            prevMarkerCorners[i] = corners[i]
+            prevMarkerCorners[i] = corner
         }
         if (++counterMarkerCorners >= checkerMarkerCorners) {
             counterMarkerCorners = 0
@@ -742,9 +742,11 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     private fun startFindingNurieMarker(isStart: Boolean) {
-        nurieFindingMode = isStart
-        methodChannel.invokeMethod("didAddNodeForAnchor", mapOf("isStart" to isStart))
-        objectsParent.isEnabled = !isStart
+        if (nurieFindingMode != isStart) {
+            nurieFindingMode = isStart
+            methodChannel.invokeMethod("nurieMarkerModeChanged", mapOf("isStart" to isStart))
+            objectsParent.isEnabled = !isStart
+        }
     }
 
     private fun addTransformableNode(args: Map<*, *>?, result: MethodChannel.Result) {
