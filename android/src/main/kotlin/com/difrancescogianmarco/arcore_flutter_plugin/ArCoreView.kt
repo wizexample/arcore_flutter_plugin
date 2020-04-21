@@ -697,7 +697,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private fun toggleScreenRecord(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
             (map["path"] as? String)?.let { path ->
-                recorder?.toggleRecord(path)
+                val useAudio = map["useAudio"] as? Number ?: VideoRecorder.AUDIO_NONE
+                recorder?.toggleRecord(path, useAudio.toInt())
             }
         }
         result.success(recorder?.isRecording == true)
@@ -706,7 +707,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private fun startScreenRecord(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
             (map["path"] as? String)?.let { path ->
-                recorder?.startRecord(path)
+                val useAudio = map["useAudio"] as? Number ?: VideoRecorder.AUDIO_NONE
+                recorder?.startRecord(path, useAudio.toInt())
             }
         }
         result.success(null)
@@ -725,6 +727,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             findNode(map["nodeName"], { node ->
                 Texture.builder().setSource(bitmap).build().thenAccept { texture ->
                     node.renderable?.let { r ->
+                        println("submeshCount: ${r.submeshCount}")
                         for (i in 0 until r.submeshCount) {
                             r.getMaterial(i).setTexture("baseColorMap", texture)
                         }

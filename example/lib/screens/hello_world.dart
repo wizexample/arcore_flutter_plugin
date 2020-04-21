@@ -43,8 +43,9 @@ class _HelloWorldState extends State<HelloWorld> {
                 RaisedButton(
                   child: Text("record"),
                   onPressed: () {
-                    arCoreController
-                        .startScreenRecord('/storage/emulated/0/DCIM/test.mp4');
+                    arCoreController.startScreenRecord(
+                        '/storage/emulated/0/DCIM/test.mp4',
+                        useAudio: ARCoreRecordingWithAudio.UseMic);
 //                    arCoreController.startAnimation('sfbAnim');
                   },
                 ),
@@ -58,6 +59,19 @@ class _HelloWorldState extends State<HelloWorld> {
                   child: Text("nurie"),
                   onPressed: () {
                     arCoreController.findNurieMarker(true);
+//                    shape.materials.value = [
+//                      ARCoreMaterial(
+//                          diffuse: ARCoreMaterialProperty(
+//                        videoProperty: ARCoreVideoProperty(
+//                          videoPath: '/storage/emulated/0/Movies/bunkatu.mp4',
+//                          isPlay: true,
+//                          isLoop: true,
+//                          chromaKeyColor:
+//                              Color.fromARGB(0xFF, 0x00, 0x00, 0x00),
+//                          enableHalfMask: true,
+//                        ).toMap(),
+//                      ))
+//                    ];
                   },
                 )
               ],
@@ -103,7 +117,7 @@ class _HelloWorldState extends State<HelloWorld> {
         "transformable-$id",
         ArCoreReferenceNode(
           name: 'node-$id',
-          object3DFileName: dir + '/supla.sfb',
+          object3DFileName: dir + '/supla2.sfb',
           scale: vector.Vector3(0.05, 0.05, 0.05),
         ));
     id++;
@@ -114,9 +128,10 @@ class _HelloWorldState extends State<HelloWorld> {
 
     kuruma = ArCoreReferenceNode(
       name: 'sfbAnim',
-      object3DFileName: dir + '/supla.sfb',
+      object3DFileName: dir + '/supla2.sfb',
       scale: vector.Vector3(0.2, 0.2, 0.2),
-      position: vector.Vector3(0, -0.5, -1),
+      position: vector.Vector3(0, -0.4, -1),
+      eulerAngles: vector.Vector3(0, Math.pi, 0),
     );
     controller.add(kuruma);
 //    ArCoreReferenceNode sfbA = ArCoreReferenceNode(
@@ -131,6 +146,7 @@ class _HelloWorldState extends State<HelloWorld> {
 //    controller.add(gltf);
   }
 
+  ARCoreGeometry shape;
   Future _addImageView(ArCoreController controller) async {
     final ByteData textureBytes = await rootBundle.load('assets/arTarget1.jpg');
 
@@ -154,19 +170,13 @@ class _HelloWorldState extends State<HelloWorld> {
           "http://www9.nhk.or.jp/das/movie/D0002060/D0002060561_00000_V_000.mp4",
           _localFilePath);
     }
-    String bunkatu = '/storage/emulated/0/movies/bunkatu.mp4';
+    String bunkatu = '/storage/emulated/0/Movies/bunkatu.mp4';
     print("filepath : $_localFilePath");
-    ARCoreGeometry shape = ARCoreSlate(materials: [
+
+    shape = ARCoreSlate(materials: [
       ARCoreMaterial(
-          diffuse: ARCoreMaterialProperty(
-        videoProperty: ARCoreVideoProperty(
-          videoPath: bunkatu,
-          isPlay: true,
-          isLoop: true,
-          chromaKeyColor: Color.fromARGB(0xFF, 0x00, 0x00, 0x00),
-          enableHalfMask: true,
-        ).toMap(),
-      ))
+        diffuse: ARCoreMaterialProperty(image: 'assets/earth.jpg'),
+      )
     ]);
 
     final node = ARCoreVideoNode(

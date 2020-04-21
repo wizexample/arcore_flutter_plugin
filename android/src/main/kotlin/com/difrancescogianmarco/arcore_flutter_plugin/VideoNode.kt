@@ -16,6 +16,7 @@ import com.google.ar.sceneform.rendering.ExternalTexture
 import com.google.ar.sceneform.rendering.FixedWidthViewSizer
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.rendering.ViewRenderable
+import java.io.File
 import kotlin.math.min
 
 @RequiresApi(Build.VERSION_CODES.N)
@@ -65,7 +66,8 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
 
     private fun setVideoPath(material: FlutterArCoreMaterial, videoPath: String) {
         video = videos[videoPath] ?: let {
-            val uri = Uri.parse(videoPath)
+            println("file $videoPath exists ${File(videoPath).exists()}")
+            val uri = Uri.fromFile(File(videoPath))
             println("uri: $uri")
             val p = MediaPlayer.create(context, uri)
             p.isLooping = material.isLooping

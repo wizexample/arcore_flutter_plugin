@@ -325,12 +325,20 @@ class ArCoreController {
     _channel.invokeMethod<bool>('screenCapture', {'path': path});
   }
 
-  Future<bool> toggleScreenRecord(String path) {
-    return _channel.invokeMethod<bool>('toggleScreenRecord', {'path': path});
+  Future<bool> toggleScreenRecord(
+    String path, {
+    ARCoreRecordingWithAudio useAudio = ARCoreRecordingWithAudio.None,
+  }) {
+    return _channel.invokeMethod<bool>(
+        'toggleScreenRecord', {'path': path, 'useAudio': useAudio._value});
   }
 
-  void startScreenRecord(String path) {
-    _channel.invokeMethod<void>('startScreenRecord', {'path': path});
+  void startScreenRecord(
+    String path, {
+    ARCoreRecordingWithAudio useAudio = ARCoreRecordingWithAudio.None,
+  }) {
+    _channel.invokeMethod<void>(
+        'startScreenRecord', {'path': path, 'useAudio': useAudio._value});
   }
 
   void stopScreenRecord() {
@@ -419,6 +427,38 @@ class ApkInstallationStatus {
 
   static ApkInstallationStatus get(int value) {
     ApkInstallationStatus ret = InstallRequested;
+    values.forEach((m) {
+      if (m._value == value) {
+        ret = m;
+        return;
+      }
+    });
+    return ret;
+  }
+
+  @override
+  String toString() {
+    return '$_text - $_value';
+  }
+}
+
+class ARCoreRecordingWithAudio {
+  const ARCoreRecordingWithAudio._(this._value, this._text);
+
+  static const ARCoreRecordingWithAudio None =
+      ARCoreRecordingWithAudio._(0, 'None');
+  static const ARCoreRecordingWithAudio UseMic =
+      ARCoreRecordingWithAudio._(1, 'UseMic');
+  static final values = [
+    None,
+    UseMic,
+  ];
+
+  final int _value;
+  final String _text;
+
+  static ARCoreRecordingWithAudio get(int value) {
+    ARCoreRecordingWithAudio ret = UseMic;
     values.forEach((m) {
       if (m._value == value) {
         ret = m;
