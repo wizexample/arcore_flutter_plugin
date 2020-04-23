@@ -42,6 +42,7 @@ class ArCoreController {
   ArCoreImageHandler onImageDetected;
   ArCoreImageHandler onAddNodeForAnchor;
   Function(bool) onNurieMarkerModeChanged;
+  Function(bool) onRecStatusChanged;
 
   static const int ANIMATION_REPEAT_INFINITE = -1;
 
@@ -115,6 +116,11 @@ class ArCoreController {
       case 'nurieMarkerModeChanged':
         if (onNurieMarkerModeChanged != null) {
           onNurieMarkerModeChanged(call.arguments['isStart']);
+        }
+        break;
+      case 'onRecStatusChanged':
+        if (onRecStatusChanged != null) {
+          onRecStatusChanged(call.arguments['isRecording']);
         }
         break;
       default:

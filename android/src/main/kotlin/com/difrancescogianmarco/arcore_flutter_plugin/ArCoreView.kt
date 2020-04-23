@@ -26,6 +26,7 @@ import com.difrancescogianmarco.arcore_flutter_plugin.models.NurieParams
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.ArCoreUtils
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.DecodableUtils
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.VideoRecorder
+import com.difrancescogianmarco.arcore_flutter_plugin.utils.VideoRecorderStatusChanged
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.UnavailableException
@@ -108,7 +109,13 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         methodChannel.setMethodCallHandler(this)
         val sceneView = ArSceneView(context)
         arSceneView = sceneView
-        recorder = VideoRecorder(sceneView)
+        recorder = VideoRecorder(sceneView).apply {
+            listener = object: VideoRecorderStatusChanged {
+                override fun onRecStatusChanged(isRecording: Boolean) {
+                    methodChannel.invokeMethod("onRecStatusChanged", mapOf("isRecording" to isRecording))
+                }
+            }
+        }
         objectsParent.name = "objectsParent"
 
         sceneView.scene?.apply {

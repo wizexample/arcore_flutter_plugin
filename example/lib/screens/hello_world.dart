@@ -45,7 +45,7 @@ class _HelloWorldState extends State<HelloWorld> {
                   onPressed: () {
                     arCoreController.startScreenRecord(
                         '/storage/emulated/0/DCIM/test.mp4',
-                        useAudio: ARCoreRecordingWithAudio.UseMic);
+                        useAudio: ARCoreRecordingWithAudio.None);
 //                    arCoreController.startAnimation('sfbAnim');
                   },
                 ),
@@ -84,10 +84,15 @@ class _HelloWorldState extends State<HelloWorld> {
 
   void _onArCoreViewCreated(ArCoreController controller) {
     arCoreController = controller;
-    _addNurie(arCoreController);
+//    _addNurie(arCoreController);
+//
+//    _addImageView(arCoreController);
+//    _add3dObject(arCoreController);
 
-    _addImageView(arCoreController);
-    _add3dObject(arCoreController);
+    arCoreController.onPlaneTap = _handleOnPlaneTap;
+    arCoreController.onRecStatusChanged = (b) {
+      print('isRecording: $b');
+    };
 
     arCoreController.startWorldTrackingSessionWithImage();
 //
@@ -100,7 +105,6 @@ class _HelloWorldState extends State<HelloWorld> {
     final dir = '/storage/emulated/0/DCIM/model';
     controller.addNurie('nurie', 0.2, filePath: dir + '/supra.png');
 
-    arCoreController.onPlaneTap = _handleOnPlaneTap;
     arCoreController.onNodeTap = (nodeName) {
       arCoreController.applyNurieTexture(nodeName, 'nurie');
     };
@@ -113,11 +117,17 @@ class _HelloWorldState extends State<HelloWorld> {
   void _handleOnPlaneTap(List<ArCoreHitTestResult> hits) {
     final dir = '/storage/emulated/0/DCIM/model';
     final hit = hits.first;
+    String model;
+    if (id % 2 == 0) {
+      model = dir + '/human.sfb';
+    } else {
+      model = dir + '/cow.sfb';
+    }
     arCoreController.addTransformableNode(
         "transformable-$id",
         ArCoreReferenceNode(
           name: 'node-$id',
-          object3DFileName: dir + '/supla2.sfb',
+          object3DFileName: model,
           scale: vector.Vector3(0.05, 0.05, 0.05),
         ));
     id++;

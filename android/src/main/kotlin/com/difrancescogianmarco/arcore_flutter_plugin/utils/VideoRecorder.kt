@@ -25,6 +25,7 @@ class VideoRecorder(private val sceneView: SceneView) {
     private val videoSize: Size
     private val contentResolver: ContentResolver
     private lateinit var path: String
+    var listener : VideoRecorderStatusChanged? = null
 
     init {
         val index = arrayOf(CamcorderProfile.QUALITY_HIGH,
@@ -69,6 +70,7 @@ class VideoRecorder(private val sceneView: SceneView) {
         sceneView.startMirroringToSurface(surface, 0, 0, profile.videoFrameHeight, profile.videoFrameWidth)
 
         isRecording = true
+        listener?.onRecStatusChanged(true)
     }
 
     fun stopRecord() {
@@ -84,6 +86,7 @@ class VideoRecorder(private val sceneView: SceneView) {
         recorder.reset()
 
         saveGallery(path)
+        listener?.onRecStatusChanged(false)
     }
 
     private fun saveGallery(videoPath: String) {
@@ -92,4 +95,8 @@ class VideoRecorder(private val sceneView: SceneView) {
             put(MediaStore.Video.Media.DATA, videoPath)
         })
     }
+}
+
+interface VideoRecorderStatusChanged {
+    fun onRecStatusChanged(isRecording: Boolean)
 }
