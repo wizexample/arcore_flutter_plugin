@@ -180,8 +180,12 @@ class ArCoreController {
     }
   }
 
-  void findNurieMarker(bool isStart) {
-    _channel.invokeMethod<void>('findNurieMarker', {'isStart': isStart});
+  void findNurieMarker(
+    bool isStart, {
+    String nurie,
+  }) {
+    _channel.invokeMethod<void>(
+        'findNurieMarker', {'isStart': isStart, 'nurie': nurie});
   }
 
   void applyNurieTexture(String nodeName, String nurie) {

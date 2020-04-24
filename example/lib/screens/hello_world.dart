@@ -58,20 +58,7 @@ class _HelloWorldState extends State<HelloWorld> {
                 RaisedButton(
                   child: Text("nurie"),
                   onPressed: () {
-                    arCoreController.findNurieMarker(true);
-//                    shape.materials.value = [
-//                      ARCoreMaterial(
-//                          diffuse: ARCoreMaterialProperty(
-//                        videoProperty: ARCoreVideoProperty(
-//                          videoPath: '/storage/emulated/0/Movies/bunkatu.mp4',
-//                          isPlay: true,
-//                          isLoop: true,
-//                          chromaKeyColor:
-//                              Color.fromARGB(0xFF, 0x00, 0x00, 0x00),
-//                          enableHalfMask: true,
-//                        ).toMap(),
-//                      ))
-//                    ];
+                    arCoreController.findNurieMarker(true, nurie: 'nurie2');
                   },
                 )
               ],
@@ -109,6 +96,11 @@ class _HelloWorldState extends State<HelloWorld> {
       filePath: dir + '/supra.png',
       gap: vector.Vector2(0.25, 0.25),
       scale: vector.Vector2(0.5, 0.5),
+    );
+    controller.addNurie(
+      'nurie2',
+      0.2,
+      filePath: dir + '/kuma.jpg',
     );
 
     arCoreController.onNodeTap = (nodeName) {

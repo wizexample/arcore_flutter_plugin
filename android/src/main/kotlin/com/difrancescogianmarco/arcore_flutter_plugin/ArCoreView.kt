@@ -765,7 +765,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
     private fun findNurieMarker(args: Map<*, *>?, result: MethodChannel.Result) {
         val isStart = args?.get("isStart") as? Boolean ?: true
-        (args?.get("name") as? String)?.let {
+        (args?.get("nurie") as? String)?.let {
             targetNurieMarker = nurieParams[it]
         }
         startFindingNurieMarker(isStart)
