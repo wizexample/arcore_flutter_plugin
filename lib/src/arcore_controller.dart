@@ -8,6 +8,7 @@ import 'package:arcore_flutter_plugin/src/geometries/arcore_slate.dart';
 import 'package:arcore_flutter_plugin/src/geometries/arcore_sphere.dart';
 import 'package:arcore_flutter_plugin/src/utils/vector_utils.dart';
 import 'package:flutter/services.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 import 'arcore_hit_test_result.dart';
 import 'arcore_node.dart';
@@ -148,6 +149,8 @@ class ArCoreController {
     int lengthInBytes,
     Uint8List bytes,
     String filePath,
+    Vector2 scale,
+    Vector2 gap,
   }) {
     bool paramsSatisfied = false;
     Map map = {
@@ -162,6 +165,14 @@ class ArCoreController {
     if (filePath != null) {
       map['filePath'] = filePath;
       paramsSatisfied = true;
+    }
+    if (scale != null) {
+      map['widthScale'] = scale.x;
+      map['heightScale'] = scale.y;
+    }
+    if (gap != null) {
+      map['xGapScale'] = gap.x;
+      map['yGapScale'] = gap.y;
     }
 
     if (paramsSatisfied) {

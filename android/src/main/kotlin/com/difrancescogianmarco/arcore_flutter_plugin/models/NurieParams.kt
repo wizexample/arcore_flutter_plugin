@@ -2,7 +2,8 @@ package com.difrancescogianmarco.arcore_flutter_plugin.models
 
 import android.graphics.Bitmap
 
-class NurieParams(val name: String) {
+class NurieParams(val name: String,
+                  val widthScale: Float = 1.0f, val heightScale: Float = 1.0f,
+                  val xGapScale: Float = 0.0f, val yGapScale: Float = 0.0f) {
     var image: Bitmap? = null
-    // todo マーカーとテクスチャの配置設定
 }

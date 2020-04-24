@@ -84,10 +84,10 @@ class _HelloWorldState extends State<HelloWorld> {
 
   void _onArCoreViewCreated(ArCoreController controller) {
     arCoreController = controller;
-//    _addNurie(arCoreController);
+    _addNurie(arCoreController);
 //
 //    _addImageView(arCoreController);
-//    _add3dObject(arCoreController);
+    _add3dObject(arCoreController);
 
     arCoreController.onPlaneTap = _handleOnPlaneTap;
     arCoreController.onRecStatusChanged = (b) {
@@ -103,7 +103,13 @@ class _HelloWorldState extends State<HelloWorld> {
 
   Future _addNurie(ArCoreController controller) async {
     final dir = '/storage/emulated/0/DCIM/model';
-    controller.addNurie('nurie', 0.2, filePath: dir + '/supra.png');
+    controller.addNurie(
+      'nurie',
+      0.2,
+      filePath: dir + '/supra.png',
+      gap: vector.Vector2(0.25, 0.25),
+      scale: vector.Vector2(0.5, 0.5),
+    );
 
     arCoreController.onNodeTap = (nodeName) {
       arCoreController.applyNurieTexture(nodeName, 'nurie');
