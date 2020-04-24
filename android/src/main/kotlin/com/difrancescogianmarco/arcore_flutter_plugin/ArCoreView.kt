@@ -160,8 +160,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                                 // capture
                                 val halfTextureWidth = augmentedImage.extentX * nurie.widthScale / 2
                                 val halfTextureHeight = augmentedImage.extentZ * nurie.heightScale / 2
-                                val moveX = augmentedImage.extentX * nurie.xGapScale
-                                val moveY = -augmentedImage.extentZ * nurie.yGapScale
+                                val moveX = augmentedImage.extentX * nurie.xOffset
+                                val moveY = -augmentedImage.extentZ * nurie.yOffset
                                 val ul = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, -halfTextureWidth + moveX, -halfTextureHeight + moveY)
                                 val ur = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, halfTextureWidth + moveX, -halfTextureHeight + moveY)
                                 val bl = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, -halfTextureWidth + moveX, halfTextureHeight + moveY)
@@ -448,11 +448,11 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             }
             val wScale = (map["widthScale"] as? Number)?.toFloat() ?: 1.0f
             val hScale = (map["heightScale"] as? Number)?.toFloat() ?: 1.0f
-            val xGap = (map["xGapScale"] as? Number)?.toFloat() ?: 0.0f
-            val yGap = (map["yGapScale"] as? Number)?.toFloat() ?: 0.0f
-            println("□■□■ addNurie $imageName texturesScale: [$wScale, $hScale] texturesGap: [$xGap, $yGap]")
+            val xOffset = (map["xOffset"] as? Number)?.toFloat() ?: 0.0f
+            val yOffset = (map["yOffset"] as? Number)?.toFloat() ?: 0.0f
+            println("□■□■ addNurie $imageName texturesScale: [$wScale, $hScale] texturesOffset: [$xOffset, $yOffset]")
 
-            nurieParams[imageName] = NurieParams(imageName, wScale, hScale, xGap, yGap)
+            nurieParams[imageName] = NurieParams(imageName, wScale, hScale, xOffset, yOffset)
             augmentedImageParams.add(ARReferenceImage(imageName, bitmap, markerSizeMeter))
         }
         result.success(null)

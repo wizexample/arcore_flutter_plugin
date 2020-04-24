@@ -150,7 +150,7 @@ class ArCoreController {
     Uint8List bytes,
     String filePath,
     Vector2 scale,
-    Vector2 gap,
+    Vector2 offset,
   }) {
     bool paramsSatisfied = false;
     Map map = {
@@ -170,9 +170,9 @@ class ArCoreController {
       map['widthScale'] = scale.x;
       map['heightScale'] = scale.y;
     }
-    if (gap != null) {
-      map['xGapScale'] = gap.x;
-      map['yGapScale'] = gap.y;
+    if (offset != null) {
+      map['xOffset'] = offset.x;
+      map['yOffset'] = offset.y;
     }
 
     if (paramsSatisfied) {

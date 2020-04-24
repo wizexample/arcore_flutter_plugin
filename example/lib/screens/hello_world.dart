@@ -94,7 +94,7 @@ class _HelloWorldState extends State<HelloWorld> {
       'nurie',
       0.2,
       filePath: dir + '/supra.png',
-      gap: vector.Vector2(0.25, 0.25),
+      offset: vector.Vector2(0.25, 0.25),
       scale: vector.Vector2(0.5, 0.5),
     );
     controller.addNurie(
