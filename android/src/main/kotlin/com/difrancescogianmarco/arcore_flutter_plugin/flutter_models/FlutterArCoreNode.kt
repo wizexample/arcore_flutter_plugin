@@ -40,6 +40,7 @@ class FlutterArCoreNode(map: Map<*, *>) {
         node.name = name
         node.localPosition = position
         node.localScale = scale
+        node.isEnabled = !(isHidden ?: true)
 
         eulerAngles?.let {
             val v = Vector3(Math.toDegrees(it.x.toDouble()).toFloat(), Math.toDegrees(it.y.toDouble()).toFloat(), Math.toDegrees(it.z.toDouble()).toFloat())
