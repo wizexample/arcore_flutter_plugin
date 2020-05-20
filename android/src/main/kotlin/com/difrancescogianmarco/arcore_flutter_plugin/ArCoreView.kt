@@ -65,6 +65,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private val TAG: String = ArCoreView::class.java.name
     private var arSceneView: ArSceneView? = null
     private val objectsParent = Node()
+    private val fixedPositionLayer = Node()
+    private val fixedMovieLayer = Node()
     private lateinit var gestureDetector: GestureDetector
     private val RC_PERMISSIONS = 0x123
     private var sceneUpdateListener: Scene.OnUpdateListener
@@ -117,11 +119,17 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 }
             }
         }
-        objectsParent.name = "objectsParent"
+        objectsParent.name = ":objectsParent"
+        fixedPositionLayer.name = ":fixedPositionLayer"
+        fixedMovieLayer.name = ":fixedMovieLayer"
 
         sceneView.scene?.apply {
             addChild(objectsParent)
+            addOnUpdateListener(::updateEachFrame)
         }
+        objectsParent.addChild(fixedPositionLayer)
+        fixedPositionLayer.addChild(fixedMovieLayer)
+        fixedMovieLayer.localPosition = Vector3(0f, 0f, 0f)
 
         sceneUpdateListener = Scene.OnUpdateListener { frameTime ->
             val frame = arSceneView?.arFrame ?: return@OnUpdateListener
@@ -431,6 +439,14 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 .registerActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
     }
 
+    private fun updateEachFrame(frameTime: FrameTime) {
+        arSceneView?.scene?.camera?.let { camera ->
+            fixedPositionLayer.localPosition = camera.localPosition
+            fixedPositionLayer.localRotation = camera.localRotation
+            // TODO scale?
+        }
+    }
+
     private fun addNurie(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
             val imageName = map["imageName"] as? String ?: return
@@ -510,6 +526,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             arSceneView
                     ?.scene
                     ?.setOnTouchListener { hitTestResult: HitTestResult, event: MotionEvent? ->
+                        debugNodeTree()
                         if (hitTestResult.node != null) {
                             Log.i(TAG, " onNodeTap " + hitTestResult.node?.name)
                             Log.i(TAG, hitTestResult.node?.localPosition.toString())
@@ -657,15 +674,22 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         args?.let { map ->
             findNode(map["name"], { node ->
                 val isEnabled = !((map["isHidden"] as? Boolean) ?: true)
-                node.isEnabled = isEnabled
+
                 if (node is VideoNode) {
-                    node.video?.player?.let { player ->
-                        if (!isEnabled) {
-                            player.pause()
-                        } else if (!player.isPlaying) {
-                            player.start()
+                    arSceneView?.let {
+                        if (!node.centralize(!isEnabled, it, fixedMovieLayer)) {
+                            node.isEnabled = isEnabled
+                            node.video?.player?.let { player ->
+                                if (!isEnabled) {
+                                    player.pause()
+                                } else if (!player.isPlaying) {
+                                    player.start()
+                                }
+                            }
                         }
                     }
+                } else {
+                    node.isEnabled = isEnabled
                 }
             })
 
@@ -806,7 +830,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
     private fun debugNodeTree(node: NodeParent? = arSceneView?.scene, level: Int = 0) {
         node?.children?.forEach {
-            println("**** [$level] ${it.name} - ${it.worldPosition} ${it.worldScale} ${it.worldRotation} ${it.javaClass}")
+            println("**** [$level] ${it.name} - pos:${it.worldPosition} scl:${it.worldScale} rot:${it.worldRotation} vis:${it.isEnabled} ${it.javaClass.simpleName}")
+            println("**** [$level] ${it.name} - pos:${it.localPosition} scl:${it.localScale} rot:${it.localRotation} vis:${it.isEnabled} ${it.javaClass.simpleName}")
             debugNodeTree(it, level + 1)
         }
     }
@@ -962,6 +987,9 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         }) {
             println("attachNodeToParent cannot found parent name $parentNodeName")
             objectsParent.addChild(node)
+        }
+        if (node is VideoNode) {
+            node.saveCurrent()
         }
         nodes[node.name] = node
     }

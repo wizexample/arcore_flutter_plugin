@@ -4,7 +4,6 @@ import 'dart:math' as Math;
 
 import 'package:arcore_flutter_plugin/arcore_flutter_plugin.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:vector_math/vector_math_64.dart' as vector;
@@ -72,8 +71,8 @@ class _HelloWorldState extends State<HelloWorld> {
   void _onArCoreViewCreated(ArCoreController controller) {
     arCoreController = controller;
     _addNurie(arCoreController);
-//
-//    _addImageView(arCoreController);
+
+    _addImageView(arCoreController);
     _add3dObject(arCoreController);
 
     arCoreController.onPlaneTap = _handleOnPlaneTap;
@@ -156,21 +155,11 @@ class _HelloWorldState extends State<HelloWorld> {
 
   ARCoreGeometry shape;
   Future _addImageView(ArCoreController controller) async {
-    final ByteData textureBytes = await rootBundle.load('assets/arTarget1.jpg');
+    controller.onAddNodeForAnchor = _didAddNodeForAnchor;
+    controller.onImageDetected = _onImageDetected;
+    controller.addImageRunWithConfigAndImage("marker", 0.2,
+        filePath: "/storage/emulated/0/DCIM/model/sdd.jpg");
 
-    final materials = ARCoreMaterial(
-      diffuse: ARCoreMaterialProperty(
-          color: Color.fromARGB(120, 66, 134, 244),
-          pixelData: PixelData(textureBytes.buffer.asUint8List())),
-    );
-    final view = ARCoreSlate(
-      materials: [materials],
-    );
-
-    final initialPosition = vector.Vector3(0, 0, -5);
-    final left = vector.Vector3(-1, 0, 0);
-    final rotation = vector.Quaternion.axisAngle(left, Math.pi / 2);
-    final initialScale = vector.Vector3(5.0, 5.0, 0.1);
     final dir = await getTemporaryDirectory();
     final _localFilePath = dir.path + '/mov.mp4';
     if (!DartFile.File(_localFilePath).existsSync()) {
@@ -183,18 +172,37 @@ class _HelloWorldState extends State<HelloWorld> {
 
     shape = ARCoreSlate(materials: [
       ARCoreMaterial(
-        diffuse: ARCoreMaterialProperty(image: 'assets/earth.jpg'),
+        diffuse: ARCoreMaterialProperty(
+          image: 'assets/earth.jpg',
+          videoProperty: ARCoreVideoProperty(
+            videoPath: _localFilePath,
+            isLoop: true,
+            isPlay: true,
+          ).toMap(),
+        ),
       )
     ]);
-
-    final node = ARCoreVideoNode(
-      name: 'img',
-      geometry: shape,
-      position: initialPosition,
-      scale: initialScale,
-    );
-    controller.add(node);
   }
+
+  void _didAddNodeForAnchor(ARCoreMarker marker) {
+    if (marker.name == "marker") {
+      final initialPosition = vector.Vector3(0, 0, 0);
+      final left = vector.Vector3(-1, 0, 0);
+      final rotation = vector.Quaternion.axisAngle(left, Math.pi / 2);
+      final initialScale = vector.Vector3(1.0, 1.0, 0.1);
+
+      final node = ARCoreVideoNode(
+        name: 'img',
+        geometry: shape,
+        scale: vector.Vector3(marker.extentX, marker.extentX, marker.extentX),
+        rotation: quaternionToVec4(rotation).xyzw,
+        centralizeOnLostTarget: true,
+      );
+      arCoreController.add(node, parentNodeName: marker.name);
+    }
+  }
+
+  void _onImageDetected(ARCoreMarker marker) {}
 
   Future _addSphere(ArCoreController controller) async {
 //    final ByteData textureBytes = await rootBundle.load('assets/earth.jpg');
@@ -275,5 +283,9 @@ class _HelloWorldState extends State<HelloWorld> {
     completer.complete(true);
 
     return completer.future;
+  }
+
+  vector.Vector4 quaternionToVec4(vector.Quaternion q) {
+    return vector.Vector4(q.x, q.y, q.z, q.w);
   }
 }

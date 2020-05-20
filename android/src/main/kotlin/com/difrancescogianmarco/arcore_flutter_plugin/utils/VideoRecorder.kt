@@ -8,7 +8,6 @@ import android.provider.MediaStore
 import android.util.Size
 import android.view.Surface
 import com.google.ar.sceneform.SceneView
-import java.io.File
 
 class VideoRecorder(private val sceneView: SceneView) {
 
@@ -25,7 +24,7 @@ class VideoRecorder(private val sceneView: SceneView) {
     private val videoSize: Size
     private val contentResolver: ContentResolver
     private lateinit var path: String
-    var listener : VideoRecorderStatusChanged? = null
+    var listener: VideoRecorderStatusChanged? = null
 
     init {
         val index = arrayOf(CamcorderProfile.QUALITY_HIGH,

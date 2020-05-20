@@ -1,5 +1,8 @@
 package com.difrancescogianmarco.arcore_flutter_plugin
 
+import android.animation.Animator
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.media.MediaPlayer
@@ -10,13 +13,18 @@ import androidx.annotation.RequiresApi
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreMaterial
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
 import com.google.ar.sceneform.Node
+import com.google.ar.sceneform.NodeParent
+import com.google.ar.sceneform.SceneView
 import com.google.ar.sceneform.math.Quaternion
+import com.google.ar.sceneform.math.QuaternionEvaluator
 import com.google.ar.sceneform.math.Vector3
+import com.google.ar.sceneform.math.Vector3Evaluator
 import com.google.ar.sceneform.rendering.ExternalTexture
 import com.google.ar.sceneform.rendering.FixedWidthViewSizer
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.rendering.ViewRenderable
 import java.io.File
+import kotlin.math.max
 import kotlin.math.min
 
 @RequiresApi(Build.VERSION_CODES.N)
@@ -33,10 +41,23 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
         fun pause() {
             videos.forEach { (_, v) -> v.player.pause() }
         }
+
+        const val FIXED_LAYER_DISTANCE = 0.1f
     }
 
     var video: VideoTexture? = null
     private val alterNode = Node()
+    private var videoPrepared = false
+
+    private var animator: Animator? = null
+    private val centralizeOnLostTarget: Boolean
+    private val margin: Float
+    private val duration: Long
+    private lateinit var originalParentNode: NodeParent
+    private lateinit var originalPosition: Vector3
+    private lateinit var originalRotation: Quaternion
+    private lateinit var originalScale: Vector3
+    private var centralized = false
 
     init {
         setMaterial(material)
@@ -45,6 +66,9 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
 
         name = params.name
         localPosition = params.position
+        centralizeOnLostTarget = params.get("centralizeOnLostTarget") as? Boolean ?: false
+        margin = (params.get("marginPercent") as? Number ?: 5).toFloat() / 100
+        duration = (params.get("durationMilliSec") as? Number ?: 150).toLong()
 
         params.eulerAngles?.let {
             val v = Vector3(Math.toDegrees(it.x.toDouble()).toFloat(), Math.toDegrees(it.y.toDouble()).toFloat(), Math.toDegrees(it.z.toDouble()).toFloat())
@@ -54,14 +78,18 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
         }
     }
 
+    fun saveCurrent() {
+        parent?.let { originalParentNode = it }
+        originalPosition = localPosition
+        originalRotation = localRotation
+        originalScale = localScale
+    }
 
     fun setMaterial(material: FlutterArCoreMaterial) {
         material.videoPath?.let { videoPath ->
             setVideoPath(material, videoPath)
             alterNode.isEnabled = false
-        } ?: let {
-            setAlterNode(material)
-        }
+        } ?: setAlterNode(material)
     }
 
     private fun setVideoPath(material: FlutterArCoreMaterial, videoPath: String) {
@@ -109,6 +137,17 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
                 val pos = localPosition
                 pos.y -= scale * vHeight / 2
                 localPosition = pos
+                saveCurrent()
+                videoPrepared = true
+            }
+            myVideo.player.setOnCompletionListener {
+                if (centralizeOnLostTarget && centralized) {
+                    this.isEnabled = false
+                    switchParent(originalParentNode)
+                    localPosition = originalPosition
+                    localRotation = originalRotation
+                    localScale = originalScale
+                }
             }
 
         }
@@ -143,6 +182,114 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
                     renderable.verticalAlignment = ViewRenderable.VerticalAlignment.CENTER
                     alterNode.renderable = renderable
                 }
+    }
+
+    fun centralize(lostTarget: Boolean, sceneView: SceneView, fixedLayer: Node): Boolean {
+        if (centralizeOnLostTarget && videoPrepared) {
+            animator?.cancel()
+            video?.player?.let { player ->
+                centralized = lostTarget
+                if (lostTarget) {
+                    if (!player.isPlaying) {
+                        this.isEnabled = false
+                    } else {
+                        // centralize
+                        switchParent(fixedLayer)
+                        val wMargin = sceneView.width * margin
+                        val hMargin = sceneView.height * margin
+                        val pointUL = calcPointOfView(sceneView, wMargin, hMargin, FIXED_LAYER_DISTANCE)
+                        val pointBR = calcPointOfView(sceneView, sceneView.width - wMargin, sceneView.height - hMargin, FIXED_LAYER_DISTANCE)
+
+                        val width = pointBR.x - pointUL.x
+                        val height = pointUL.y - pointBR.y
+                        val dispScale = max((player.videoWidth / width), (player.videoHeight / height))
+
+                        createAnimator(Vector3(0f, -player.videoHeight / dispScale / 2f, -FIXED_LAYER_DISTANCE),
+                                Quaternion.identity(),
+                                Vector3(player.videoWidth / dispScale, player.videoHeight / dispScale, 0.01f)
+                        )
+                    }
+                } else {
+                    // reposition
+                    switchParent(originalParentNode)
+                    createAnimator(originalPosition, originalRotation, originalScale)
+
+                    this.isEnabled = true
+                    if (!player.isPlaying) {
+                        player.start()
+                    }
+                }
+            }
+            return true
+        }
+        return false
+    }
+
+    @Suppress("SameParameterValue")
+    private fun calcPointOfView(sceneView: SceneView, left: Float, top: Float, zVal: Float): Vector3 {
+        val camera = sceneView.scene.camera
+
+        val ray = camera.screenPointToRay(left, top)
+        val rayDirection = ray.direction
+
+        val rayOriginNode = Node()
+        rayOriginNode.worldPosition = ray.origin
+
+        val origInCam = camera.worldToLocalPoint(ray.origin)
+        val tempPoint = rayOriginNode.localToWorldPoint(ray.direction)
+        val dirInCam = camera.worldToLocalPoint(tempPoint)
+
+        val lengthInVert = dirInCam.z - origInCam.z
+        val magnitude = (-zVal - origInCam.z) / lengthInVert
+
+        val p = rayDirection.scaled(magnitude)
+        val p2 = rayOriginNode.localToWorldPoint(p)
+
+        return camera.worldToLocalPoint(p2)
+    }
+
+    private fun switchParent(newParent: NodeParent) {
+        val prevPos = worldPosition
+        val prevRot = worldRotation
+        val prevScl = worldScale
+        this.parent?.removeChild(this)
+        setParent(newParent)
+        worldPosition = prevPos
+        worldRotation = prevRot
+        worldScale = prevScl
+    }
+
+    private fun createAnimator(pos: Vector3, rotate: Quaternion, scale: Vector3) {
+        val posAnimator = ObjectAnimator().apply {
+            propertyName = "localPosition"
+            setObjectValues(pos)
+            duration = this@VideoNode.duration
+            setEvaluator(Vector3Evaluator())
+            setAutoCancel(true)
+            target = this@VideoNode
+        }
+        val rotateAnimator = ObjectAnimator().apply {
+            propertyName = "localRotation"
+            setObjectValues(rotate)
+            duration = this@VideoNode.duration
+            setEvaluator(QuaternionEvaluator())
+            setAutoCancel(true)
+            target = this@VideoNode
+        }
+        val scaleAnimator = ObjectAnimator().apply {
+            propertyName = "localScale"
+            setObjectValues(scale)
+            duration = this@VideoNode.duration
+            setEvaluator(Vector3Evaluator())
+            setAutoCancel(true)
+            target = this@VideoNode
+        }
+        animator = AnimatorSet().apply {
+            play(posAnimator)
+                    .with(rotateAnimator)
+                    .with(scaleAnimator)
+            start()
+        }
     }
 }
 

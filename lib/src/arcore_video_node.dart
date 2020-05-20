@@ -15,6 +15,9 @@ class ARCoreVideoNode extends ARCoreNode {
     int renderingOrder,
     bool isHidden,
     bool isPlay,
+    this.centralizeOnLostTarget = false,
+    this.marginPercent = 5.0,
+    this.durationMilliSec = 150.0,
   })  : isPlay = ValueNotifier(isPlay),
         super(
           geometry: geometry,
@@ -26,6 +29,11 @@ class ARCoreVideoNode extends ARCoreNode {
           renderingOrder: renderingOrder,
           isHidden: isHidden,
         );
+
+  final bool centralizeOnLostTarget;
+  final double marginPercent;
+  final double durationMilliSec;
+
   final ValueNotifier<bool> isPlay;
 
   @override
@@ -37,6 +45,9 @@ class ARCoreVideoNode extends ARCoreNode {
         'rotation': convertVector4ToMap(rotation.value),
         'isHidden': isHidden.value,
         'isPlay': isPlay.value,
+        'centralizeOnLostTarget': centralizeOnLostTarget,
+        'marginPercent': marginPercent,
+        'durationMilliSec': durationMilliSec,
       }
         ..addAll(super.toMap())
         ..removeWhere((String k, dynamic v) => v == null);

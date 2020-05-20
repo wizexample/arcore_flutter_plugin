@@ -17,7 +17,7 @@ typedef StringResultHandler = void Function(String text);
 typedef UnsupportedHandler = void Function(String text);
 typedef ArCoreHitResultHandler = void Function(List<ArCoreHitTestResult> hits);
 typedef ArCorePlaneHandler = void Function(ARCorePlane plane);
-typedef ArCoreImageHandler = void Function(ARCoreAnchor marker);
+typedef ArCoreImageHandler = void Function(ARCoreMarker marker);
 
 class ArCoreController {
   ArCoreController({
@@ -242,6 +242,9 @@ class ArCoreController {
     node.scale.addListener(() => _handleScaleChanged(node));
 
     node.isHidden.addListener(() => _handleIsHiddenChanged(node));
+    if (node is ARCoreVideoNode) {
+      node.isPlay.addListener(() => _handleIsPlayChanged(node));
+    }
 
     if (node.geometry != null) {
       node.geometry.materials.addListener(() => _updateMaterials(node));
@@ -285,6 +288,11 @@ class ArCoreController {
   void _handleIsHiddenChanged(ARCoreNode node) {
     _channel.invokeMethod<void>('isHiddenChanged',
         _getHandlerParams(node, {'isHidden': node.isHidden.value}));
+  }
+
+  void _handleIsPlayChanged(ARCoreVideoNode node) {
+    _channel.invokeMethod<void>('isPlayChanged',
+        _getHandlerParams(node, {'isPlay': node.isPlay.value}));
   }
 
   void _updateMaterials(ARCoreNode node) {

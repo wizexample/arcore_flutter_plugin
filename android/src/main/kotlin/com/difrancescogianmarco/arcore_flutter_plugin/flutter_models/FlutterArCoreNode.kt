@@ -6,7 +6,7 @@ import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 
-class FlutterArCoreNode(map: Map<*, *>) {
+class FlutterArCoreNode(private val map: Map<*, *>) {
     val name = map["name"] as String?
     val scale = parseVector3(map["scale"] as? HashMap<*, *>) ?: Vector3.one()
     private val eulerMap = map["eulerAngles"] as? HashMap<*, *>
@@ -56,6 +56,10 @@ class FlutterArCoreNode(map: Map<*, *>) {
             return FlutterArCoreShape(map)
         }
         return null
+    }
+
+    fun get(key: String): Any? {
+        return map[key]
     }
 
     override fun toString(): String {
