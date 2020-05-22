@@ -156,7 +156,7 @@ class _HelloWorldState extends State<HelloWorld> {
   ARCoreGeometry shape;
   Future _addImageView(ArCoreController controller) async {
     controller.onAddNodeForAnchor = _didAddNodeForAnchor;
-    controller.onImageDetected = _onImageDetected;
+    controller.onUpdateNodeForAnchor = _onAnchorUpdated;
     controller.addImageRunWithConfigAndImage("marker", 0.2,
         filePath: "/storage/emulated/0/DCIM/model/sdd.jpg");
 
@@ -184,25 +184,35 @@ class _HelloWorldState extends State<HelloWorld> {
     ]);
   }
 
-  void _didAddNodeForAnchor(ARCoreMarker marker) {
-    if (marker.name == "marker") {
-      final initialPosition = vector.Vector3(0, 0, 0);
-      final left = vector.Vector3(-1, 0, 0);
-      final rotation = vector.Quaternion.axisAngle(left, Math.pi / 2);
-      final initialScale = vector.Vector3(1.0, 1.0, 0.1);
+  void _didAddNodeForAnchor(ARCoreAnchor anchor) {
+    if (anchor is ARCoreImageAnchor) {
+      if (anchor.markerName == "marker") {
+        final initialPosition = vector.Vector3(0, 0, 0);
+        final left = vector.Vector3(-1, 0, 0);
+        final rotation = vector.Quaternion.axisAngle(left, Math.pi / 2);
+        final initialScale = vector.Vector3(1.0, 1.0, 0.1);
 
-      final node = ARCoreVideoNode(
-        name: 'img',
-        geometry: shape,
-        scale: vector.Vector3(marker.extentX, marker.extentX, marker.extentX),
-        rotation: quaternionToVec4(rotation).xyzw,
-        centralizeOnLostTarget: true,
-      );
-      arCoreController.add(node, parentNodeName: marker.name);
+        final node = ARCoreVideoNode(
+          name: 'img',
+          geometry: shape,
+          scale: vector.Vector3(anchor.extentX, anchor.extentX, anchor.extentX),
+          rotation: quaternionToVec4(rotation).xyzw,
+          centralizeOnLostTarget: true,
+        );
+        arCoreController.add(node, parentNodeName: anchor.nodeName);
+      }
+    } else if (anchor is ARCorePlaneAnchor) {
+      print('anchor is plane: $anchor');
     }
   }
 
-  void _onImageDetected(ARCoreMarker marker) {}
+  void _onAnchorUpdated(ARCoreAnchor anchor) {
+    if (anchor is ARCorePlaneAnchor) {
+      print('plane anchor: $anchor');
+    } else if (anchor is ARCoreImageAnchor) {
+      print('image anchor: $anchor');
+    }
+  }
 
   Future _addSphere(ArCoreController controller) async {
 //    final ByteData textureBytes = await rootBundle.load('assets/earth.jpg');

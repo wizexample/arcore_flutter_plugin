@@ -66,7 +66,7 @@ class FlutterArCoreNode(private val map: Map<*, *>) {
         return "dartType: $dartType\n" +
                 "name: $name\n" +
                 "shape: ${shape.toString()}\n" +
-                "obcject3DFileName: $object3DFileName \n" +
+                "object3DFileName: $object3DFileName \n" +
                 "objectUrl: $objectUrl \n" +
                 "position: $position\n" +
                 "scale: $scale\n" +

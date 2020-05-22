@@ -16,8 +16,7 @@ import 'arcore_node.dart';
 typedef StringResultHandler = void Function(String text);
 typedef UnsupportedHandler = void Function(String text);
 typedef ArCoreHitResultHandler = void Function(List<ArCoreHitTestResult> hits);
-typedef ArCorePlaneHandler = void Function(ARCorePlane plane);
-typedef ArCoreImageHandler = void Function(ARCoreMarker marker);
+typedef ArCoreAnchorHandler = void Function(ARCoreAnchor marker);
 
 class ArCoreController {
   ArCoreController({
@@ -39,9 +38,8 @@ class ArCoreController {
 
 //  UnsupportedHandler onUnsupported;
   ArCoreHitResultHandler onPlaneTap;
-  ArCorePlaneHandler onPlaneDetected;
-  ArCoreImageHandler onImageDetected;
-  ArCoreImageHandler onAddNodeForAnchor;
+  ArCoreAnchorHandler onUpdateNodeForAnchor;
+  ArCoreAnchorHandler onAddNodeForAnchor;
   Function(bool) onNurieMarkerModeChanged;
   Function(bool) onRecStatusChanged;
 
@@ -96,21 +94,15 @@ class ArCoreController {
           onPlaneTap(objects);
         }
         break;
-      case 'onPlaneDetected':
-        if (enableUpdateListener && onPlaneDetected != null) {
-          final plane = ARCorePlane.fromMap(call.arguments);
-          onPlaneDetected(plane);
-        }
-        break;
-      case 'onImageDetected':
-        if (enableUpdateListener && onImageDetected != null) {
-          final marker = ARCoreMarker.fromMap(call.arguments);
-          onImageDetected(marker);
+      case 'didUpdateNodeForAnchor':
+        if (enableUpdateListener && onUpdateNodeForAnchor != null) {
+          final ARCoreAnchor marker = ARCoreAnchor.buildAnchor(call.arguments);
+          onUpdateNodeForAnchor(marker);
         }
         break;
       case 'didAddNodeForAnchor':
         if (enableUpdateListener && onAddNodeForAnchor != null) {
-          final marker = ARCoreMarker.fromMap(call.arguments);
+          final ARCoreAnchor marker = ARCoreAnchor.buildAnchor(call.arguments);
           onAddNodeForAnchor(marker);
         }
         break;

@@ -140,20 +140,31 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             for (plane in frame.getUpdatedTrackables(Plane::class.java)) {
                 val pose = plane.centerPose
                 val map: HashMap<String, Any> = HashMap()
-                map["visible"] = if (plane.trackingState == TrackingState.TRACKING) "true" else "false"
+                map["anchorType"] = "planeAnchor"
+                map["visible"] = plane.trackingState == TrackingState.TRACKING
                 map["trackingState"] = plane.trackingState.name
                 map["type"] = plane.type.ordinal
                 map["centerPose"] = FlutterArCorePose(pose.translation, pose.rotationQuaternion).toHashMap()
                 map["extentX"] = plane.extentX
                 map["extentZ"] = plane.extentZ
+                map["nodeName"] = plane.name
 
-                methodChannel.invokeMethod("onPlaneDetected", map)
+                if (!nodes.containsKey(plane.name)) {
+                    val anchorNode = AnchorNode(plane.createAnchor(plane.centerPose))
+                    anchorNode.name = plane.name
+                    objectsParent.addChild(anchorNode)
+                    nodes[anchorNode.name] = anchorNode
+                    methodChannel.invokeMethod("didAddNodeForAnchor", map)
+                }
+
+                methodChannel.invokeMethod("didUpdateNodeForAnchor", map)
             }
             for (augmentedImage in frame.getUpdatedTrackables(AugmentedImage::class.java)) {
                 val pose = augmentedImage.centerPose
                 val map: HashMap<String, Any> = HashMap()
                 val name = augmentedImage.name
-                map["visible"] = if (augmentedImage.trackingState == TrackingState.TRACKING) "true" else "false"
+                map["anchorType"] = "imageAnchor"
+                map["visible"] = augmentedImage.trackingState == TrackingState.TRACKING
                 map["trackingState"] = augmentedImage.trackingState.name
                 map["centerPose"] = FlutterArCorePose(pose.translation, pose.rotationQuaternion).toHashMap()
                 map["extentX"] = augmentedImage.extentX
@@ -197,7 +208,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                     }
                 }
 
-                methodChannel.invokeMethod("onImageDetected", map)
+                methodChannel.invokeMethod("didUpdateNodeForAnchor", map)
             }
         }
 
@@ -1003,6 +1014,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
         return transformationSystem
     }
+
+    private val Plane.name: String get() = ":plane-${hashCode()}"
 
     /* private fun tryPlaceNode(tap: MotionEvent?, frame: Frame) {
         if (tap != null && frame.camera.trackingState == TrackingState.TRACKING) {
