@@ -28,7 +28,6 @@ class _HelloWorldState extends State<HelloWorld> {
           children: <Widget>[
             ArCoreView(
               onArCoreViewCreated: _onArCoreViewCreated,
-              enableUpdateListener: true,
               enableTapRecognizer: true,
             ),
             Row(

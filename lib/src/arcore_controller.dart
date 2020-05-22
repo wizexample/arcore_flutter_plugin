@@ -22,21 +22,18 @@ class ArCoreController {
   ArCoreController({
     int id,
     this.enableTapRecognizer,
-    this.enableUpdateListener, //    @required this.onUnsupported,
   }) {
-    print('$id / $enableTapRecognizer / $enableUpdateListener');
+    print('$id / $enableTapRecognizer');
     _channel = MethodChannel('arcore_flutter_plugin_$id');
     _channel.setMethodCallHandler(_handleMethodCalls);
     init();
   }
 
-  final bool enableUpdateListener;
   final bool enableTapRecognizer;
   MethodChannel _channel;
   StringResultHandler onError;
   StringResultHandler onNodeTap;
 
-//  UnsupportedHandler onUnsupported;
   ArCoreHitResultHandler onPlaneTap;
   ArCoreAnchorHandler onUpdateNodeForAnchor;
   ArCoreAnchorHandler onAddNodeForAnchor;
@@ -63,7 +60,6 @@ class ArCoreController {
     try {
       await _channel.invokeMethod<void>('init', {
         'enableTapRecognizer': enableTapRecognizer,
-        'enableUpdateListener': enableUpdateListener,
       });
     } on PlatformException catch (ex) {
       print(ex.message);
@@ -95,13 +91,13 @@ class ArCoreController {
         }
         break;
       case 'didUpdateNodeForAnchor':
-        if (enableUpdateListener && onUpdateNodeForAnchor != null) {
+        if (onUpdateNodeForAnchor != null) {
           final ARCoreAnchor marker = ARCoreAnchor.buildAnchor(call.arguments);
           onUpdateNodeForAnchor(marker);
         }
         break;
       case 'didAddNodeForAnchor':
-        if (enableUpdateListener && onAddNodeForAnchor != null) {
+        if (onAddNodeForAnchor != null) {
           final ARCoreAnchor marker = ARCoreAnchor.buildAnchor(call.arguments);
           onAddNodeForAnchor(marker);
         }
