@@ -1,0 +1,16 @@
+{
+  "buildFiles": [
+    "/Users/kamiesu-tomohisa/Documents/workspace/flutter/carm2/arcore_flutter_plugin/android/opencv411/libcxx_helper/CMakeLists.txt"
+  ],
+  "cleanCommands": [
+    "/Users/kamiesu-tomohisa/Library/Android/sdk/cmake/3.6.4111459/bin/cmake --build /Users/kamiesu-tomohisa/Documents/workspace/flutter/carm2/arcore_flutter_plugin/android/opencv411/.cxx/cmake/profile/armeabi-v7a --target clean"
+  ],
+  "libraries": {
+    "opencv_jni_shared-Release-armeabi-v7a": {
+      "artifactName": "opencv_jni_shared",
+      "buildCommand": "/Users/kamiesu-tomohisa/Library/Android/sdk/cmake/3.6.4111459/bin/cmake --build /Users/kamiesu-tomohisa/Documents/workspace/flutter/carm2/arcore_flutter_plugin/android/opencv411/.cxx/cmake/profile/armeabi-v7a --target opencv_jni_shared",
+      "abi": "armeabi-v7a",
+      "output": "/Users/kamiesu-tomohisa/Documents/workspace/flutter/carm2/arcore_flutter_plugin/android/opencv411/.cxx/cmake/profile/armeabi-v7a/libopencv_jni_shared.a"
+    }
+  }
+}

@@ -23,6 +23,7 @@ import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCo
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCorePose
 import com.difrancescogianmarco.arcore_flutter_plugin.models.ARReferenceImage
 import com.difrancescogianmarco.arcore_flutter_plugin.models.NurieParams
+import com.difrancescogianmarco.arcore_flutter_plugin.opencv.TestUtil
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.ArCoreUtils
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.DecodableUtils
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.VideoRecorder
@@ -559,6 +560,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
     private fun onSingleTap(tap: MotionEvent?) {
         Log.i(TAG, " onSingleTap")
+        TestUtil().test()
         val frame = arSceneView?.arFrame
         var tapped: HitResult? = null
         if (frame != null) {

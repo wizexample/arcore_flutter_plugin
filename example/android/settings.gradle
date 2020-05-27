@@ -13,3 +13,7 @@ plugins.each { name, path ->
     include ":$name"
     project(":$name").projectDir = pluginDirectory
 }
+
+def androidProject = new File(rootProject.projectDir.parentFile.parentFile, 'android')
+include ':opencv411'
+project(':opencv411').projectDir = new File(androidProject, './opencv411')

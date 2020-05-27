@@ -30,11 +30,28 @@ android {
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
+//        main.jniLibs.srcDirs = ['./opencv411/native/libs']
     }
     defaultConfig {
         minSdkVersion 23
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DpathToProject:STRING=" + project(':opencv411').projectDir.parent,
+                        "-DOpenCV_DIR=" + project(':opencv411').projectDir + "/native/jni",
+                        "-DANDROID_TOOLCHAIN=clang",
+                        "-DANDROID_STL=c++_shared"
+                cppFlags "-std=c++11"
+            }
+        }
     }
+    externalNativeBuild {
+        cmake {
+            path 'src/main/cpp/CMakeLists.txt'
+        }
+    }
+
 
     // Sceneform libraries use language constructs from Java 8.
     // Add these compile options if targeting minSdkVersion < 26.
@@ -60,4 +77,5 @@ dependencies {
     implementation 'com.google.ar.sceneform:assets:1.14.0'
     implementation 'com.google.firebase:firebase-ml-model-interpreter:22.0.1'
     implementation 'com.google.android.gms:play-services-auth:17.0.0'
+    implementation project(':opencv411')
 }
