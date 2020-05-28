@@ -20,6 +20,9 @@ import com.difrancescogianmarco.arcore_flutter_plugin.ARType
 import com.google.ar.core.ArCoreApk
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.*
+import com.google.ar.sceneform.Node
+import com.google.ar.sceneform.SceneView
+import com.google.ar.sceneform.math.Vector3
 import java.util.*
 
 class ArCoreUtils {
@@ -174,6 +177,28 @@ class ArCoreUtils {
                 return "Sceneform requires OpenGL ES 3.0 later"
             }
             return null
+        }
+
+        fun calcPointOfView(sceneView: SceneView, left: Float, top: Float, zVal: Float): Vector3 {
+            val camera = sceneView.scene.camera
+
+            val ray = camera.screenPointToRay(left, top)
+            val rayDirection = ray.direction
+
+            val rayOriginNode = Node()
+            rayOriginNode.worldPosition = ray.origin
+
+            val origInCam = camera.worldToLocalPoint(ray.origin)
+            val tempPoint = rayOriginNode.localToWorldPoint(ray.direction)
+            val dirInCam = camera.worldToLocalPoint(tempPoint)
+
+            val lengthInVert = dirInCam.z - origInCam.z
+            val magnitude = (-zVal - origInCam.z) / lengthInVert
+
+            val p = rayDirection.scaled(magnitude)
+            val p2 = rayOriginNode.localToWorldPoint(p)
+
+            return camera.worldToLocalPoint(p2)
         }
     }
 }

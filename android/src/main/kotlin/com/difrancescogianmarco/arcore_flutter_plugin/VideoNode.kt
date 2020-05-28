@@ -12,6 +12,7 @@ import android.widget.ImageView
 import androidx.annotation.RequiresApi
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreMaterial
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
+import com.difrancescogianmarco.arcore_flutter_plugin.utils.ArCoreUtils
 import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.NodeParent
 import com.google.ar.sceneform.SceneView
@@ -197,8 +198,8 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
                         switchParent(fixedLayer)
                         val wMargin = sceneView.width * margin
                         val hMargin = sceneView.height * margin
-                        val pointUL = calcPointOfView(sceneView, wMargin, hMargin, FIXED_LAYER_DISTANCE)
-                        val pointBR = calcPointOfView(sceneView, sceneView.width - wMargin, sceneView.height - hMargin, FIXED_LAYER_DISTANCE)
+                        val pointUL = ArCoreUtils.calcPointOfView(sceneView, wMargin, hMargin, FIXED_LAYER_DISTANCE)
+                        val pointBR = ArCoreUtils.calcPointOfView(sceneView, sceneView.width - wMargin, sceneView.height - hMargin, FIXED_LAYER_DISTANCE)
 
                         val width = pointBR.x - pointUL.x
                         val height = pointUL.y - pointBR.y
@@ -223,29 +224,6 @@ class VideoNode(private val context: Context, private val params: FlutterArCoreN
             return true
         }
         return false
-    }
-
-    @Suppress("SameParameterValue")
-    private fun calcPointOfView(sceneView: SceneView, left: Float, top: Float, zVal: Float): Vector3 {
-        val camera = sceneView.scene.camera
-
-        val ray = camera.screenPointToRay(left, top)
-        val rayDirection = ray.direction
-
-        val rayOriginNode = Node()
-        rayOriginNode.worldPosition = ray.origin
-
-        val origInCam = camera.worldToLocalPoint(ray.origin)
-        val tempPoint = rayOriginNode.localToWorldPoint(ray.direction)
-        val dirInCam = camera.worldToLocalPoint(tempPoint)
-
-        val lengthInVert = dirInCam.z - origInCam.z
-        val magnitude = (-zVal - origInCam.z) / lengthInVert
-
-        val p = rayDirection.scaled(magnitude)
-        val p2 = rayOriginNode.localToWorldPoint(p)
-
-        return camera.worldToLocalPoint(p2)
     }
 
     private fun switchParent(newParent: NodeParent) {

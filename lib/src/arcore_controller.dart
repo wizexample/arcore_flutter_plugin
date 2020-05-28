@@ -338,6 +338,10 @@ class ArCoreController {
     return values;
   }
 
+  void oekaki() {
+    _channel.invokeMethod<bool>('oekaki');
+  }
+
   void screenCapture(String path) {
     _channel.invokeMethod<bool>('screenCapture', {'path': path});
   }

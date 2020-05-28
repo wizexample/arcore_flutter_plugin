@@ -1,9 +1,13 @@
 package com.difrancescogianmarco.arcore_flutter_plugin.opencv
 
+import android.graphics.Bitmap
+
 class TestUtil {
 
-    fun test() {
-        println("**** test command ${extTest()}")
+    fun test(bitmap: Bitmap): Bitmap {
+        return Util.bitmapConvertInNative(bitmap) { ins, outs ->
+            extTest(ins, outs)
+        }
     }
 
     companion object {
@@ -12,6 +16,6 @@ class TestUtil {
         }
     }
 
-    private external fun extTest(): Int
+    private external fun extTest(srcAddr: Long, destAddr: Long)
 
 }

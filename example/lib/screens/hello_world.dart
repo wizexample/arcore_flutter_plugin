@@ -39,12 +39,15 @@ class _HelloWorldState extends State<HelloWorld> {
                   },
                 ),
                 RaisedButton(
-                  child: Text("record"),
+                  child: Text("capture"),
                   onPressed: () {
-                    arCoreController.startScreenRecord(
-                        '/storage/emulated/0/DCIM/test.mp4',
-                        useAudio: ARCoreRecordingWithAudio.None);
-//                    arCoreController.startAnimation('sfbAnim');
+                    DateTime today = new DateTime.now();
+                    String dateSlug =
+                        "${today.year.toString()}${today.month.toString().padLeft(2, '0')}${today.day.toString().padLeft(2, '0')}_${today.hour.toString().padLeft(2, '0')}${today.minute.toString().padLeft(2, '0')}";
+                    arCoreController.oekaki();
+//                    arCoreController.startScreenRecord(
+//                        '/storage/emulated/0/DCIM/test.mp4',
+//                        useAudio: ARCoreRecordingWithAudio.None);
                   },
                 ),
                 RaisedButton(
@@ -132,14 +135,14 @@ class _HelloWorldState extends State<HelloWorld> {
   Future _add3dObject(ArCoreController controller) async {
     final dir = '/storage/emulated/0/DCIM/model';
 
-    kuruma = ArCoreReferenceNode(
-      name: 'sfbAnim',
-      object3DFileName: dir + '/supla2.sfb',
-      scale: vector.Vector3(0.2, 0.2, 0.2),
-      position: vector.Vector3(0, -0.4, -1),
-      eulerAngles: vector.Vector3(0, Math.pi, 0),
-    );
-    controller.add(kuruma);
+//    kuruma = ArCoreReferenceNode(
+//      name: 'sfbAnim',
+//      object3DFileName: dir + '/supla2.sfb',
+//      scale: vector.Vector3(0.2, 0.2, 0.2),
+//      position: vector.Vector3(0, -0.4, -1),
+//      eulerAngles: vector.Vector3(0, Math.pi, 0),
+//    );
+//    controller.add(kuruma);
 //    ArCoreReferenceNode sfbA = ArCoreReferenceNode(
 //      object3DFileName: dir + '/ri.sfb',
 //      position: vector.Vector3(0, 0.5, -2),

@@ -9,7 +9,11 @@
 
 TestUtil testUtil = TestUtil();
 
-extern "C" JNIEXPORT int JNICALL
-Java_com_difrancescogianmarco_arcore_1flutter_1plugin_opencv_TestUtil_extTest(JNIEnv *env, jobject thiz) {
-    return testUtil.test();
+extern "C" JNIEXPORT void JNICALL
+Java_com_difrancescogianmarco_arcore_1flutter_1plugin_opencv_TestUtil_extTest(JNIEnv *env, jobject thiz,
+        jlong src, jlong dest) {
+    auto *srcMat = (Mat4b *) src;
+    auto *destMat = (Mat4b *) dest;
+
+    testUtil.test(*srcMat, *destMat);
 }

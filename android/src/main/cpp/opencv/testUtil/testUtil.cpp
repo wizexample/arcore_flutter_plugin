@@ -6,10 +6,20 @@
 //  Copyright © 2019 The Chromium Authors. All rights reserved.
 //
 
+#include <iostream>
 #include "testUtil.hpp"
 
-int TestUtil::test() {
-    cv::Mat mat = Mat3b();
-    mat.clone();
-    return 100;
+void TestUtil::test(Mat4b src, Mat4b &dest) {
+    dest = src.clone();
+    Mat1b gray = Mat1b::zeros(src.size());
+    Mat1b binary = Mat1b::zeros(src.size());
+    cvtColor(src, gray, COLOR_RGBA2GRAY);
+    threshold(gray, binary, 0, 255, THRESH_BINARY | THRESH_OTSU);
+
+    binary.forEach([&dest](uchar &p, const int *position) -> void {
+        if (p > 0) {
+            Vec4b &maskPt = dest.at<Vec4b>(position[0], position[1]);
+            maskPt[3] = 0;
+        }
+    });
 }

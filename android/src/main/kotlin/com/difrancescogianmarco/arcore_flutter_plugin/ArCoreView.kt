@@ -381,6 +381,9 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 isReady = true
                 onResume()
             }
+            "oekaki" -> {
+                oekaki(args, result)
+            }
             "screenCapture" -> {
                 screenCapture(args, result)
             }
@@ -560,7 +563,6 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
     private fun onSingleTap(tap: MotionEvent?) {
         Log.i(TAG, " onSingleTap")
-        TestUtil().test()
         val frame = arSceneView?.arFrame
         var tapped: HitResult? = null
         if (frame != null) {
@@ -726,6 +728,29 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                     }
                 }
             })
+        }
+
+        result.success(null)
+    }
+
+    private var c = 0
+    private fun oekaki(args: Map<*, *>?, result: MethodChannel.Result) {
+        arSceneView?.let { sceneView ->
+            capture(sceneView) { temp ->
+                val bitmap = TestUtil().test(temp)
+                Texture.builder().setSource(bitmap).build().thenAccept { texture ->
+                    MaterialFactory.makeTransparentWithTexture(context, texture).thenAccept { material ->
+                        material
+                        val nodeSize = Vector3(bitmap.width.toFloat() / bitmap.height, 1f, 0.001f)
+                        val center = ArCoreUtils.calcPointOfView(sceneView, sceneView.width.toFloat() / 2, sceneView.height.toFloat() / 2, 1f)
+                        val renderable = ShapeFactory.makeCube(nodeSize, center, material)
+                        val node = Node()
+                        node.renderable = renderable
+                        node.name = "testObject ${c++}"
+                        objectsParent.addChild(node)
+                    }
+                }
+            }
         }
 
         result.success(null)

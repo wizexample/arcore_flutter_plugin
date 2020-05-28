@@ -16,7 +16,7 @@ using namespace cv;
 class TestUtil {
   
 public:
-    int test();
+    void test(Mat4b src, Mat4b &dest);
 };
 
 #endif /* testUtil_hpp */
