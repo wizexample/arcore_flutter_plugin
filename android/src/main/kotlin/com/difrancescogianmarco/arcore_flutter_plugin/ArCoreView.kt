@@ -161,6 +161,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 methodChannel.invokeMethod("didUpdateNodeForAnchor", map)
             }
             for (augmentedImage in frame.getUpdatedTrackables(AugmentedImage::class.java)) {
+
                 val pose = augmentedImage.centerPose
                 val map: HashMap<String, Any> = HashMap()
                 val name = augmentedImage.name
@@ -552,12 +553,9 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                         return@setOnTouchListener gestureDetector.onTouchEvent(event)
                     }
         }
-        val enableUpdateListener: Boolean? = call.argument("enableUpdateListener")
-        if (enableUpdateListener != null && enableUpdateListener) {
             // Set an update listener on the Scene that will hide the loading message once a Plane is
             // detected.
             arSceneView?.scene?.addOnUpdateListener(sceneUpdateListener)
-        }
         result.success(null)
     }
 

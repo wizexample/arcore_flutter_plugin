@@ -35,14 +35,13 @@ class ARCoreAnchor {
 
   static ARCoreAnchor buildAnchor(Map arguments) {
     final type = arguments['anchorType'].toString();
-    final map = arguments.cast<String, String>();
     switch (type) {
       case 'planeAnchor':
-        return ARCorePlaneAnchor.fromMap(map);
+        return ARCorePlaneAnchor.fromMap(arguments);
       case 'imageAnchor':
-        return ARCoreImageAnchor.fromMap(map);
+        return ARCoreImageAnchor.fromMap(arguments);
     }
-    return ARCoreAnchor.fromMap(map);
+    return ARCoreAnchor.fromMap(arguments);
   }
 }
 
