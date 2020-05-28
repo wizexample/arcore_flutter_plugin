@@ -7,10 +7,12 @@ enum TrackingState {
 }
 
 class ARCoreAnchor {
+  bool visible;
   TrackingState trackingState;
   double extentX;
   double extentZ;
   ArCorePose centerPose;
+  String nodeName;
 
   ARCoreAnchor.fromMap(Map<dynamic, dynamic> map) {
     String trackStr = map["trackingState"];
@@ -24,17 +26,29 @@ class ARCoreAnchor {
       default:
         this.trackingState = TrackingState.STOPPED;
     }
-
+    this.nodeName = map["nodeName"];
+    this.visible = map["visible"];
     this.extentX = map["extentX"];
     this.extentZ = map["extentZ"];
     this.centerPose = ArCorePose.fromMap(map["centerPose"]);
   }
+
+  static ARCoreAnchor buildAnchor(Map arguments) {
+    final type = arguments['anchorType'].toString();
+    switch (type) {
+      case 'planeAnchor':
+        return ARCorePlaneAnchor.fromMap(arguments);
+      case 'imageAnchor':
+        return ARCoreImageAnchor.fromMap(arguments);
+    }
+    return ARCoreAnchor.fromMap(arguments);
+  }
 }
 
-class ARCorePlane extends ARCoreAnchor {
+class ARCorePlaneAnchor extends ARCoreAnchor {
   ARCorePlaneType type;
 
-  ARCorePlane.fromMap(Map map) : super.fromMap(map) {
+  ARCorePlaneAnchor.fromMap(Map map) : super.fromMap(map) {
     print('fromMap $map');
     print(' ${map['type']}');
     this.type = ARCorePlaneType.values[map["type"] ?? 0];
@@ -47,12 +61,12 @@ enum ARCorePlaneType {
   VERTICAL,
 }
 
-class ARCoreMarker extends ARCoreAnchor {
-  String name;
+class ARCoreImageAnchor extends ARCoreAnchor {
+  String markerName;
   TrackingMethod trackingMethod;
 
-  ARCoreMarker.fromMap(Map map) : super.fromMap(map) {
-    this.name = map["markerName"];
+  ARCoreImageAnchor.fromMap(Map map) : super.fromMap(map) {
+    this.markerName = map['markerName'];
     int v = map["trackingMethod"];
     this.trackingMethod = TrackingMethod.get(v);
   }

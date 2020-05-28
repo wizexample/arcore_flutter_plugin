@@ -16,32 +16,27 @@ import 'arcore_node.dart';
 typedef StringResultHandler = void Function(String text);
 typedef UnsupportedHandler = void Function(String text);
 typedef ArCoreHitResultHandler = void Function(List<ArCoreHitTestResult> hits);
-typedef ArCorePlaneHandler = void Function(ARCorePlane plane);
-typedef ArCoreImageHandler = void Function(ARCoreAnchor marker);
+typedef ArCoreAnchorHandler = void Function(ARCoreAnchor marker);
 
 class ArCoreController {
   ArCoreController({
     int id,
     this.enableTapRecognizer,
-    this.enableUpdateListener, //    @required this.onUnsupported,
   }) {
-    print('$id / $enableTapRecognizer / $enableUpdateListener');
+    print('$id / $enableTapRecognizer');
     _channel = MethodChannel('arcore_flutter_plugin_$id');
     _channel.setMethodCallHandler(_handleMethodCalls);
     init();
   }
 
-  final bool enableUpdateListener;
   final bool enableTapRecognizer;
   MethodChannel _channel;
   StringResultHandler onError;
   StringResultHandler onNodeTap;
 
-//  UnsupportedHandler onUnsupported;
   ArCoreHitResultHandler onPlaneTap;
-  ArCorePlaneHandler onPlaneDetected;
-  ArCoreImageHandler onImageDetected;
-  ArCoreImageHandler onAddNodeForAnchor;
+  ArCoreAnchorHandler onUpdateNodeForAnchor;
+  ArCoreAnchorHandler onAddNodeForAnchor;
   Function(bool) onNurieMarkerModeChanged;
   Function(bool) onRecStatusChanged;
 
@@ -65,7 +60,6 @@ class ArCoreController {
     try {
       await _channel.invokeMethod<void>('init', {
         'enableTapRecognizer': enableTapRecognizer,
-        'enableUpdateListener': enableUpdateListener,
       });
     } on PlatformException catch (ex) {
       print(ex.message);
@@ -96,21 +90,15 @@ class ArCoreController {
           onPlaneTap(objects);
         }
         break;
-      case 'onPlaneDetected':
-        if (enableUpdateListener && onPlaneDetected != null) {
-          final plane = ARCorePlane.fromMap(call.arguments);
-          onPlaneDetected(plane);
-        }
-        break;
-      case 'onImageDetected':
-        if (enableUpdateListener && onImageDetected != null) {
-          final marker = ARCoreMarker.fromMap(call.arguments);
-          onImageDetected(marker);
+      case 'didUpdateNodeForAnchor':
+        if (onUpdateNodeForAnchor != null) {
+          final ARCoreAnchor marker = ARCoreAnchor.buildAnchor(call.arguments);
+          onUpdateNodeForAnchor(marker);
         }
         break;
       case 'didAddNodeForAnchor':
-        if (enableUpdateListener && onAddNodeForAnchor != null) {
-          final marker = ARCoreMarker.fromMap(call.arguments);
+        if (onAddNodeForAnchor != null) {
+          final ARCoreAnchor marker = ARCoreAnchor.buildAnchor(call.arguments);
           onAddNodeForAnchor(marker);
         }
         break;
@@ -242,6 +230,9 @@ class ArCoreController {
     node.scale.addListener(() => _handleScaleChanged(node));
 
     node.isHidden.addListener(() => _handleIsHiddenChanged(node));
+    if (node is ARCoreVideoNode) {
+      node.isPlay.addListener(() => _handleIsPlayChanged(node));
+    }
 
     if (node.geometry != null) {
       node.geometry.materials.addListener(() => _updateMaterials(node));
@@ -285,6 +276,11 @@ class ArCoreController {
   void _handleIsHiddenChanged(ARCoreNode node) {
     _channel.invokeMethod<void>('isHiddenChanged',
         _getHandlerParams(node, {'isHidden': node.isHidden.value}));
+  }
+
+  void _handleIsPlayChanged(ARCoreVideoNode node) {
+    _channel.invokeMethod<void>('isPlayChanged',
+        _getHandlerParams(node, {'isPlay': node.isPlay.value}));
   }
 
   void _updateMaterials(ARCoreNode node) {

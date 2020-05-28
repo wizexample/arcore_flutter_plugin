@@ -20,7 +20,6 @@ class _AutoDetectPlaneState extends State<AutoDetectPlane> {
         ),
         body: ArCoreView(
           onArCoreViewCreated: _onArCoreViewCreated,
-          enableUpdateListener: true,
         ),
       ),
     );
@@ -28,17 +27,20 @@ class _AutoDetectPlaneState extends State<AutoDetectPlane> {
 
   void _onArCoreViewCreated(ArCoreController controller) {
     arCoreController = controller;
-    arCoreController.onPlaneDetected = _handleOnPlaneDetected;
+    arCoreController.onUpdateNodeForAnchor = _handleOnPlaneDetected;
   }
 
-  void _handleOnPlaneDetected(ARCorePlane plane) {
-    if (node != null) {
-      arCoreController.remove(node.name);
+  void _handleOnPlaneDetected(ARCoreAnchor plane) {
+    if (plane is ARCorePlaneAnchor) {
+      if (node != null) {
+        arCoreController.remove(node.name);
+      }
+      _addSphere(arCoreController, plane);
     }
-    _addSphere(arCoreController, plane);
   }
 
-  Future _addSphere(ArCoreController controller, ARCorePlane plane) async {
+  Future _addSphere(
+      ArCoreController controller, ARCorePlaneAnchor plane) async {
     final ByteData textureBytes = await rootBundle.load('assets/earth.jpg');
 
     final material = ARCoreMaterial(
