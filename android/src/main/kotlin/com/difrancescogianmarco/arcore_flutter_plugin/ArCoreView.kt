@@ -15,6 +15,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.PixelCopy
 import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreHitTestResult
@@ -22,7 +23,8 @@ import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCo
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCorePose
 import com.difrancescogianmarco.arcore_flutter_plugin.models.ARReferenceImage
-import com.difrancescogianmarco.arcore_flutter_plugin.models.NurieParams
+import com.difrancescogianmarco.arcore_flutter_plugin.models.MarkerType
+import com.difrancescogianmarco.arcore_flutter_plugin.models.SpecialMarker
 import com.difrancescogianmarco.arcore_flutter_plugin.opencv.TestUtil
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.ArCoreUtils
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.DecodableUtils
@@ -84,9 +86,9 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private var isReady = false
     private val augmentedImageMap = HashMap<AugmentedImage, Node>()
 
-    private val nurieParams = HashMap<String, NurieParams>()
-    private var nurieFindingMode = false
-    private var targetNurieMarker: NurieParams? = null
+    private val specialMarkers = HashMap<String, SpecialMarker>()
+    private var specialMarkerFindingMode = false
+    private var targetSpecialMarker: SpecialMarker? = null
     private val thresholdMarkerCorners = 10f
     private val markerGazingDuration = 250L
     private val prevMarkerCorners = Array<PointF>(4) { PointF(0f, 0f) }
@@ -175,14 +177,23 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 map["markerName"] = name
                 map["trackingMethod"] = getTrackingMethod(augmentedImage.trackingMethod)
                 if (augmentedImage.trackingState == TrackingState.TRACKING) {
-                    if (nurieFindingMode && (targetNurieMarker == null || targetNurieMarker?.name.equals(name))) {
-                        nurieParams[name]?.let { nurie ->
+                    if (!augmentedImageMap.containsKey(augmentedImage)) {
+                        val anchorNode = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
+                        anchorNode.name = name
+                        objectsParent.addChild(anchorNode)
+                        nodes[anchorNode.name] = anchorNode
+                        augmentedImageMap[augmentedImage] = anchorNode
+                        methodChannel.invokeMethod("didAddNodeForAnchor", map)
+                    }
+                    if (specialMarkerFindingMode && (targetSpecialMarker == null || targetSpecialMarker?.name.equals(name))) {
+                        specialMarkers[name]?.let { marker ->
                             if (augmentedImage.trackingMethod == AugmentedImage.TrackingMethod.FULL_TRACKING) {
                                 // capture
-                                val halfTextureWidth = augmentedImage.extentX * nurie.widthScale / 2
-                                val halfTextureHeight = augmentedImage.extentZ * nurie.heightScale / 2
-                                val moveX = augmentedImage.extentX * nurie.xOffset
-                                val moveY = -augmentedImage.extentZ * nurie.yOffset
+                                val halfTextureWidth = augmentedImage.extentX * marker.widthScale / 2
+                                val halfTextureHeight = augmentedImage.extentZ * marker.heightScale / 2
+                                val moveX = augmentedImage.extentX * marker.xOffset
+                                val moveY = -augmentedImage.extentZ * marker.yOffset
+//                                val moveX = halfTextureWidth
                                 val ul = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, -halfTextureWidth + moveX, -halfTextureHeight + moveY)
                                 val ur = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, halfTextureWidth + moveX, -halfTextureHeight + moveY)
                                 val bl = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, -halfTextureWidth + moveX, halfTextureHeight + moveY)
@@ -191,21 +202,36 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                                 if (validMarkerCorners(sceneView.width, sceneView.height, ul, ur, bl, br)) {
                                     capture(sceneView) { captured ->
                                         val bitmap = affine(captured, ul, ur, bl, br)
-                                        nurie.image = bitmap
+                                        when (marker.type) {
+                                            MarkerType.Nurie -> {
+                                                marker.image = bitmap
+                                            }
+                                            MarkerType.Oekaki -> {
+                                                val oekakiBitmap = TestUtil().test(bitmap)
+                                                marker.image = oekakiBitmap
+                                                val imageView = ImageView(context).apply {
+                                                    setImageBitmap(oekakiBitmap)
+                                                }
+                                                ViewRenderable.builder()
+                                                        .setView(context, imageView)
+                                                        .setSizer(FixedHeightViewSizer(augmentedImage.extentZ * marker.heightScale))
+                                                        .setHorizontalAlignment(ViewRenderable.HorizontalAlignment.CENTER)
+                                                        .setVerticalAlignment(ViewRenderable.VerticalAlignment.CENTER)
+                                                        .build().thenAccept { renderable ->
+                                                            val node = Node()
+                                                            node.localRotation = Quaternion.axisAngle(Vector3.left(), 90f)
+                                                            node.localPosition = Vector3(augmentedImage.extentX * marker.widthScale, 0f, augmentedImage.extentZ * marker.heightScale)
+                                                            node.renderable = renderable
+                                                            node.name = "testObject ${c++}"
+                                                            attachNodeToParent(node, name)
+                                                        }
+                                            }
+                                        }
                                     }
                                     objectsParent.isEnabled = true
                                     startFindingNurieMarker(false)
                                 }
                             }
-                        }
-                    } else {
-                        if (!augmentedImageMap.containsKey(augmentedImage)) {
-                            val anchorNode = AnchorNode(augmentedImage.createAnchor(augmentedImage.centerPose))
-                            anchorNode.name = augmentedImage.name
-                            objectsParent.addChild(anchorNode)
-                            nodes[anchorNode.name] = anchorNode
-                            augmentedImageMap[augmentedImage] = anchorNode
-                            methodChannel.invokeMethod("didAddNodeForAnchor", map)
                         }
                     }
                 }
@@ -403,8 +429,11 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             "addNurie" -> {
                 addNurie(args, result)
             }
+            "addOekaki" -> {
+                addOekaki(args, result)
+            }
             "findNurieMarker" -> {
-                findNurieMarker(args, result)
+                findSpecialMarker(args, result)
             }
             "applyNurieTexture" -> {
                 applyNurieTexture(args, result)
@@ -464,6 +493,14 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     private fun addNurie(args: Map<*, *>?, result: MethodChannel.Result) {
+        addSpecialMarker(args, result, MarkerType.Nurie)
+    }
+
+    private fun addOekaki(args: Map<*, *>?, result: MethodChannel.Result) {
+        addSpecialMarker(args, result, MarkerType.Oekaki)
+    }
+
+    private fun addSpecialMarker(args: Map<*, *>?, result: MethodChannel.Result, type: MarkerType) {
         args?.let { map ->
             val imageName = map["imageName"] as? String ?: return
             val markerSizeMeter = (map["markerSizeMeter"] as? Number ?: 1).toFloat()
@@ -475,20 +512,21 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                 BitmapFactory.decodeByteArray(bytes, 0, bytesLength)
             }
             bitmap ?: let {
-                println("addNurie bitmap not satisfied.")
+                println("addSpecialMarker bitmap not satisfied.")
                 return
             }
             val wScale = (map["widthScale"] as? Number)?.toFloat() ?: 1.0f
             val hScale = (map["heightScale"] as? Number)?.toFloat() ?: 1.0f
             val xOffset = (map["xOffset"] as? Number)?.toFloat() ?: 0.0f
             val yOffset = (map["yOffset"] as? Number)?.toFloat() ?: 0.0f
-            println("□■□■ addNurie $imageName texturesScale: [$wScale, $hScale] texturesOffset: [$xOffset, $yOffset]")
+            println("□■□■ addSpecialMarker [${type.name}] $imageName texturesScale: [$wScale, $hScale] texturesOffset: [$xOffset, $yOffset]")
 
-            nurieParams[imageName] = NurieParams(imageName, wScale, hScale, xOffset, yOffset)
+            specialMarkers[imageName] = SpecialMarker(imageName, wScale, hScale, xOffset, yOffset, type)
             augmentedImageParams.add(ARReferenceImage(imageName, bitmap, markerSizeMeter))
         }
         result.success(null)
     }
+
 
     private fun addArMarker(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
@@ -553,9 +591,9 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                         return@setOnTouchListener gestureDetector.onTouchEvent(event)
                     }
         }
-            // Set an update listener on the Scene that will hide the loading message once a Plane is
-            // detected.
-            arSceneView?.scene?.addOnUpdateListener(sceneUpdateListener)
+        // Set an update listener on the Scene that will hide the loading message once a Plane is
+        // detected.
+        arSceneView?.scene?.addOnUpdateListener(sceneUpdateListener)
         result.success(null)
     }
 
@@ -736,18 +774,25 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         arSceneView?.let { sceneView ->
             capture(sceneView) { temp ->
                 val bitmap = TestUtil().test(temp)
-                Texture.builder().setSource(bitmap).build().thenAccept { texture ->
-                    MaterialFactory.makeTransparentWithTexture(context, texture).thenAccept { material ->
-                        material
-                        val nodeSize = Vector3(bitmap.width.toFloat() / bitmap.height, 1f, 0.001f)
-                        val center = ArCoreUtils.calcPointOfView(sceneView, sceneView.width.toFloat() / 2, sceneView.height.toFloat() / 2, 1f)
-                        val renderable = ShapeFactory.makeCube(nodeSize, center, material)
-                        val node = Node()
-                        node.renderable = renderable
-                        node.name = "testObject ${c++}"
-                        objectsParent.addChild(node)
-                    }
+                val imageView = ImageView(context).apply {
+                    setImageBitmap(bitmap)
                 }
+                ViewRenderable.builder()
+                        .setView(context, imageView)
+                        .setSizer(FixedHeightViewSizer(1f))
+                        .setHorizontalAlignment(ViewRenderable.HorizontalAlignment.CENTER)
+                        .setVerticalAlignment(ViewRenderable.VerticalAlignment.CENTER)
+                        .build().thenAccept { renderable ->
+                            val node = Node()
+                            val vec = Vector3(0f, 0f, -1f)
+                            val pos = sceneView.scene.camera.localToWorldPoint(vec)
+                            node.worldRotation = sceneView.scene.camera.worldRotation
+                            node.worldPosition = pos
+
+                            node.renderable = renderable
+                            node.name = "testObject ${c++}"
+                            objectsParent.addChild(node)
+                        }
             }
         }
 
@@ -807,7 +852,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     private fun applyNurieTexture(args: Map<*, *>?, result: MethodChannel.Result) {
         args?.let { map ->
             val nurieStr = map["nurie"] as? String ?: return@let
-            val nurieParam = nurieParams[nurieStr] ?: return@let
+            val nurieParam = specialMarkers[nurieStr] ?: return@let
             val bitmap = nurieParam.image ?: return@let
             findNode(map["nodeName"], { node ->
                 Texture.builder().setSource(bitmap).build().thenAccept { texture ->
@@ -823,18 +868,18 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         result.success(null)
     }
 
-    private fun findNurieMarker(args: Map<*, *>?, result: MethodChannel.Result) {
+    private fun findSpecialMarker(args: Map<*, *>?, result: MethodChannel.Result) {
         val isStart = args?.get("isStart") as? Boolean ?: true
-        targetNurieMarker = (args?.get("nurie") as? String)?.let {
-            nurieParams[it]
+        targetSpecialMarker = (args?.get("nurie") as? String)?.let {
+            specialMarkers[it]
         }
         startFindingNurieMarker(isStart)
         result.success(null)
     }
 
     private fun startFindingNurieMarker(isStart: Boolean) {
-        if (nurieFindingMode != isStart) {
-            nurieFindingMode = isStart
+        if (specialMarkerFindingMode != isStart) {
+            specialMarkerFindingMode = isStart
             methodChannel.invokeMethod("nurieMarkerModeChanged", mapOf("isStart" to isStart))
         }
     }
@@ -994,6 +1039,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         println("□■□■ setupAugmentedImageDatabase")
 
         augmentedImageParams.forEach { reference ->
+            println("**** setupAugmentedImageDatabase ${reference.imageName} ${reference.physicalSize}")
             database.addImage(reference.imageName, reference.image, reference.physicalSize)
             reference.image.recycle()
         }

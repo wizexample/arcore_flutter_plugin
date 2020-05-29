@@ -140,6 +140,48 @@ class ArCoreController {
     Vector2 scale,
     Vector2 offset,
   }) {
+    Map map = _createSpecialMarkerMap(imageName, markerSizeMeter,
+        lengthInBytes: lengthInBytes,
+        bytes: bytes,
+        filePath: filePath,
+        scale: scale,
+        offset: offset);
+
+    if (map != null) {
+      _channel.invokeMethod<void>('addNurie', map);
+    }
+  }
+
+  void addOekaki(
+    String imageName,
+    double markerSizeMeter, {
+    int lengthInBytes,
+    Uint8List bytes,
+    String filePath,
+    Vector2 scale,
+    Vector2 offset,
+  }) {
+    Map map = _createSpecialMarkerMap(imageName, markerSizeMeter,
+        lengthInBytes: lengthInBytes,
+        bytes: bytes,
+        filePath: filePath,
+        scale: scale,
+        offset: offset);
+
+    if (map != null) {
+      _channel.invokeMethod<void>('addOekaki', map);
+    }
+  }
+
+  Map _createSpecialMarkerMap(
+    String imageName,
+    double markerSizeMeter, {
+    int lengthInBytes,
+    Uint8List bytes,
+    String filePath,
+    Vector2 scale,
+    Vector2 offset,
+  }) {
     bool paramsSatisfied = false;
     Map map = {
       'imageName': imageName,
@@ -162,10 +204,7 @@ class ArCoreController {
       map['xOffset'] = offset.x;
       map['yOffset'] = offset.y;
     }
-
-    if (paramsSatisfied) {
-      _channel.invokeMethod<void>('addNurie', map);
-    }
+    return paramsSatisfied ? map : null;
   }
 
   void findNurieMarker(

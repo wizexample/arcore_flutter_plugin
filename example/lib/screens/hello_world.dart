@@ -32,22 +32,27 @@ class _HelloWorldState extends State<HelloWorld> {
             ),
             Row(
               children: <Widget>[
+//                RaisedButton(
+//                  child: Text("animation"),
+//                  onPressed: () {
+//                    arCoreController.startAnimation('sfbAnim');
+//                  },
+//                ),
                 RaisedButton(
-                  child: Text("animation"),
+                  child: Text("oekaki"),
                   onPressed: () {
-                    arCoreController.startAnimation('sfbAnim');
+                    arCoreController.findNurieMarker(true);
                   },
                 ),
                 RaisedButton(
-                  child: Text("capture"),
+                  child: Text("rec"),
                   onPressed: () {
                     DateTime today = new DateTime.now();
                     String dateSlug =
                         "${today.year.toString()}${today.month.toString().padLeft(2, '0')}${today.day.toString().padLeft(2, '0')}_${today.hour.toString().padLeft(2, '0')}${today.minute.toString().padLeft(2, '0')}";
-                    arCoreController.oekaki();
-//                    arCoreController.startScreenRecord(
-//                        '/storage/emulated/0/DCIM/test.mp4',
-//                        useAudio: ARCoreRecordingWithAudio.None);
+                    arCoreController.startScreenRecord(
+                        '/storage/emulated/0/DCIM/$dateSlug.mp4',
+                        useAudio: ARCoreRecordingWithAudio.None);
                   },
                 ),
                 RaisedButton(
@@ -72,10 +77,11 @@ class _HelloWorldState extends State<HelloWorld> {
 
   void _onArCoreViewCreated(ArCoreController controller) {
     arCoreController = controller;
-    _addNurie(arCoreController);
+//    _addNurie(arCoreController);
+    _addOekaki(arCoreController);
 
-    _addImageView(arCoreController);
-    _add3dObject(arCoreController);
+//    _addImageView(arCoreController);
+//    _add3dObject(arCoreController);
 
     arCoreController.onPlaneTap = _handleOnPlaneTap;
     arCoreController.onRecStatusChanged = (b) {
@@ -107,6 +113,28 @@ class _HelloWorldState extends State<HelloWorld> {
     arCoreController.onNodeTap = (nodeName) {
       arCoreController.applyNurieTexture(nodeName, 'nurie');
     };
+    arCoreController.onNurieMarkerModeChanged = (b) {
+      print('onNurieMarkerModeChanged $b');
+    };
+  }
+
+  Future _addOekaki(ArCoreController controller) async {
+    final dir = '/storage/emulated/0/DCIM/marker';
+    controller.addOekaki(
+      'oekaki',
+      0.2,
+      filePath: dir + '/apollo11.jpg',
+      offset: vector.Vector2(1.5, -1.5),
+      scale: vector.Vector2(2, 2),
+    );
+    controller.addOekaki(
+      'oekaki2',
+      0.2,
+      filePath: dir + '/mach.jpg',
+      offset: vector.Vector2(1, -1),
+      scale: vector.Vector2(2, 2),
+    );
+
     arCoreController.onNurieMarkerModeChanged = (b) {
       print('onNurieMarkerModeChanged $b');
     };
@@ -156,11 +184,17 @@ class _HelloWorldState extends State<HelloWorld> {
   }
 
   ARCoreGeometry shape;
+  ARCoreGeometry shape2;
+  ARCoreGeometry shape3;
   Future _addImageView(ArCoreController controller) async {
     controller.onAddNodeForAnchor = _didAddNodeForAnchor;
     controller.onUpdateNodeForAnchor = _onAnchorUpdated;
-    controller.addImageRunWithConfigAndImage("marker", 0.2,
-        filePath: "/storage/emulated/0/DCIM/model/sdd.jpg");
+    controller.addImageRunWithConfigAndImage("marker1", 0.2,
+        filePath: "/storage/emulated/0/DCIM/marker/apollo11.jpg");
+    controller.addImageRunWithConfigAndImage("marker2", 0.2,
+        filePath: "/storage/emulated/0/DCIM/marker/mach.jpg");
+    controller.addImageRunWithConfigAndImage("marker3", 0.2,
+        filePath: "/storage/emulated/0/DCIM/marker/tomcat.jpg");
 
     final dir = await getTemporaryDirectory();
     final _localFilePath = dir.path + '/mov.mp4';
@@ -170,6 +204,7 @@ class _HelloWorldState extends State<HelloWorld> {
           _localFilePath);
     }
     String bunkatu = '/storage/emulated/0/Movies/bunkatu.mp4';
+    String mv2017 = '/storage/emulated/0/Movies/2017.mp4';
     print("filepath : $_localFilePath");
 
     shape = ARCoreSlate(materials: [
@@ -184,11 +219,35 @@ class _HelloWorldState extends State<HelloWorld> {
         ),
       )
     ]);
+    shape2 = ARCoreSlate(materials: [
+      ARCoreMaterial(
+        diffuse: ARCoreMaterialProperty(
+          image: 'assets/earth.jpg',
+          videoProperty: ARCoreVideoProperty(
+            videoPath: bunkatu,
+            isLoop: true,
+            isPlay: true,
+          ).toMap(),
+        ),
+      )
+    ]);
+    shape3 = ARCoreSlate(materials: [
+      ARCoreMaterial(
+        diffuse: ARCoreMaterialProperty(
+          image: 'assets/earth.jpg',
+          videoProperty: ARCoreVideoProperty(
+            videoPath: mv2017,
+            isLoop: true,
+            isPlay: true,
+          ).toMap(),
+        ),
+      )
+    ]);
   }
 
   void _didAddNodeForAnchor(ARCoreAnchor anchor) {
     if (anchor is ARCoreImageAnchor) {
-      if (anchor.markerName == "marker") {
+      if (anchor.markerName == "marker1") {
         final initialPosition = vector.Vector3(0, 0, 0);
         final left = vector.Vector3(-1, 0, 0);
         final rotation = vector.Quaternion.axisAngle(left, Math.pi / 2);
@@ -197,6 +256,34 @@ class _HelloWorldState extends State<HelloWorld> {
         final node = ARCoreVideoNode(
           name: 'img',
           geometry: shape,
+          scale: vector.Vector3(anchor.extentX, anchor.extentX, anchor.extentX),
+          rotation: quaternionToVec4(rotation).xyzw,
+          centralizeOnLostTarget: true,
+        );
+        arCoreController.add(node, parentNodeName: anchor.nodeName);
+      } else if (anchor.markerName == "marker2") {
+        final initialPosition = vector.Vector3(0, 0, 0);
+        final left = vector.Vector3(-1, 0, 0);
+        final rotation = vector.Quaternion.axisAngle(left, Math.pi / 2);
+        final initialScale = vector.Vector3(1.0, 1.0, 0.1);
+
+        final node = ARCoreVideoNode(
+          name: 'img2',
+          geometry: shape2,
+          scale: vector.Vector3(anchor.extentX, anchor.extentX, anchor.extentX),
+          rotation: quaternionToVec4(rotation).xyzw,
+          centralizeOnLostTarget: true,
+        );
+        arCoreController.add(node, parentNodeName: anchor.nodeName);
+      } else if (anchor.markerName == "marker3") {
+        final initialPosition = vector.Vector3(0, 0, 0);
+        final left = vector.Vector3(-1, 0, 0);
+        final rotation = vector.Quaternion.axisAngle(left, Math.pi / 2);
+        final initialScale = vector.Vector3(1.0, 1.0, 0.1);
+
+        final node = ARCoreVideoNode(
+          name: 'img3',
+          geometry: shape3,
           scale: vector.Vector3(anchor.extentX, anchor.extentX, anchor.extentX),
           rotation: quaternionToVec4(rotation).xyzw,
           centralizeOnLostTarget: true,
