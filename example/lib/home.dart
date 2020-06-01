@@ -14,7 +14,6 @@ import 'screens/runtime_materials.dart';
 class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-
     _isSupportedARCore();
 
     return Scaffold(
@@ -71,6 +70,13 @@ class HomeScreen extends StatelessWidget {
                   builder: (context) => AugmentedFacesScreen()));
             },
             title: Text("Augmented Faces"),
+          ),
+          ListTile(
+            onTap: () {
+              ArCoreController.getApkAvailabilityStatus()
+                  .then((value) => print('**** value: $value'));
+            },
+            title: Text("Check"),
           ),
         ],
       ),

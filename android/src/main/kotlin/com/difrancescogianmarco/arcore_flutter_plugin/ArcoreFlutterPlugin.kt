@@ -1,13 +1,12 @@
 package com.difrancescogianmarco.arcore_flutter_plugin
 
 import android.app.Activity
+import android.os.Handler
 import com.google.ar.core.ArCoreApk
 import io.flutter.embedding.engine.plugins.FlutterPlugin
-import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.PluginRegistry
-import android.os.Handler
 
 class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     private var channel: MethodChannel? = null
@@ -18,20 +17,19 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         const val PREPARE = "arcore_prepare_plugin"
 
         val TAG = "ArCoreFlutterPlugin"
+
         @JvmStatic
         fun registerWith(registrar: PluginRegistry.Registrar) {
             registrar
                     .platformViewRegistry()
                     .registerViewFactory("arcore_flutter_plugin", ArCoreViewFactory(registrar.messenger()))
 
-            val instance = ArcoreFlutterPlugin(registrar.messenger())
-            instance.context = registrar.activity()
-        }
-    }
-
-    private constructor(messenger: BinaryMessenger) {
-        channel = MethodChannel(messenger, PREPARE).apply {
-            setMethodCallHandler(this@ArcoreFlutterPlugin)
+            ArcoreFlutterPlugin().also { instance ->
+                instance.channel = MethodChannel(registrar.messenger(), PREPARE).apply {
+                    setMethodCallHandler(instance)
+                    instance.context = registrar.activity()
+                }
+            }
         }
     }
 
