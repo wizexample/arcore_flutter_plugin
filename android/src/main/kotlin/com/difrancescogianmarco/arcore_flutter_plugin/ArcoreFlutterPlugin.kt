@@ -4,13 +4,15 @@ import android.app.Activity
 import android.os.Handler
 import com.google.ar.core.ArCoreApk
 import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.PluginRegistry
 
-class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
+class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware {
     private var channel: MethodChannel? = null
-    lateinit var context: Activity
+    var context: Activity? = null
 
     companion object {
 
@@ -67,6 +69,10 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
 
     private fun checkARCoreApk(result: MethodChannel.Result) {
+        context ?:let {
+            result.success(ArCoreApk.Availability.UNKNOWN_ERROR)
+            return
+        }
         val availability = ArCoreApk.getInstance().checkAvailability(context)
         if (availability.isTransient) {
             Handler().postDelayed(Runnable {
@@ -94,5 +100,21 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
             else -> 1
         }
         result.success(ret)
+    }
+
+    override fun onDetachedFromActivity() {
+        context = null
+    }
+
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        context = binding.activity
+    }
+
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        context = binding.activity
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+        context = null
     }
 }
