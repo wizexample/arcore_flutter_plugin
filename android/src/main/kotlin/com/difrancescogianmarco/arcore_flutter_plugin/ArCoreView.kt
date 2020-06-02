@@ -275,7 +275,9 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         }
 
         // Lastly request CAMERA permission which is required by ARCore.
-        ArCoreUtils.requestCameraPermission(activity, RC_PERMISSIONS)
+        activity?.let {
+            ArCoreUtils.requestCameraPermission(it, RC_PERMISSIONS)
+        }
         setupLifeCycle(context)
     }
 
@@ -363,7 +365,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
         debugNodeTree()
         when (call.method) {
             "init" -> {
-                arSceneViewInit(call, result, activity)
+                arSceneViewInit(call, result, context)
             }
             "addNode" -> {
                 onAddNode(args, result)
@@ -479,8 +481,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             }
         }
 
-        activity.application
-                .registerActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
+        activity?.application
+                ?.registerActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
     }
 
     private fun updateEachFrame(frameTime: FrameTime) {
@@ -930,6 +932,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     fun onResume() {
 
         Log.i(TAG, "onResume()")
+        val activity = activity?:return
 
         if (arSceneView == null) {
             return
@@ -1020,8 +1023,8 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     fun onDestroy() {
-        activity.application
-                .unregisterActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
+        activity?.application
+                ?.unregisterActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
         VideoNode.dispose()
 
         if (arSceneView != null) {
@@ -1050,7 +1053,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
 
     private fun addNode(flutterArCoreNode: FlutterArCoreNode) {
         nodes[flutterArCoreNode.name] ?: let {
-            NodeFactory.makeNode(activity.applicationContext, flutterArCoreNode) { node, _ ->
+            NodeFactory.makeNode(context, flutterArCoreNode) { node, _ ->
                 if (node != null) {
                     attachNodeToParent(node, flutterArCoreNode.parentNodeName)
                     for (n in flutterArCoreNode.children) {
