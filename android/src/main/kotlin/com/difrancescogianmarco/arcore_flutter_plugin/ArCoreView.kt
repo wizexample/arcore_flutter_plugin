@@ -177,14 +177,26 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
                         nurieParams[name]?.let { nurie ->
                             if (augmentedImage.trackingMethod == AugmentedImage.TrackingMethod.FULL_TRACKING) {
                                 // capture
-                                val halfTextureWidth = augmentedImage.extentX * nurie.widthScale / 2
-                                val halfTextureHeight = augmentedImage.extentZ * nurie.heightScale / 2
-                                val moveX = augmentedImage.extentX * nurie.xOffset
-                                val moveY = -augmentedImage.extentZ * nurie.yOffset
-                                val ul = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, -halfTextureWidth + moveX, -halfTextureHeight + moveY)
-                                val ur = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, halfTextureWidth + moveX, -halfTextureHeight + moveY)
-                                val bl = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, -halfTextureWidth + moveX, halfTextureHeight + moveY)
-                                val br = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, halfTextureWidth + moveX, halfTextureHeight + moveY)
+                                val textureWidth = augmentedImage.extentX * nurie.widthScale
+                                val textureHeight = augmentedImage.extentZ * nurie.heightScale
+                                val l = when {
+                                    nurie.xOffset > 0f -> (nurie.xOffset - 0.5f) * augmentedImage.extentX
+                                    nurie.xOffset < 0f -> (nurie.xOffset + 0.5f) * augmentedImage.extentX - textureWidth
+                                    else -> -textureWidth / 2
+                                }
+                                val r = l + textureWidth
+                                val u = when {
+                                    nurie.yOffset > 0f -> -(nurie.yOffset - 0.5f) * augmentedImage.extentZ - textureHeight
+                                    nurie.yOffset < 0f -> -(nurie.yOffset + 0.5f) * augmentedImage.extentZ
+                                    else -> -textureHeight / 2
+                                }
+                                val b = u + textureHeight
+
+                                val ul = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, l, u)
+                                val ur = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, r, u)
+                                val bl = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, l, b)
+                                val br = getScreenPoint(sceneView.scene.camera, augmentedImage.centerPose, r, b)
+
 
                                 if (validMarkerCorners(sceneView.width, sceneView.height, ul, ur, bl, br)) {
                                     capture(sceneView) { captured ->
