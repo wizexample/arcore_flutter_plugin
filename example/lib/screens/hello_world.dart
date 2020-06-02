@@ -107,11 +107,11 @@ class _HelloWorldState extends State<HelloWorld> {
     controller.addNurie(
       'nurie2',
       0.2,
-      filePath: dir + '/kuma.jpg',
+      filePath: dir + '/human_cow.png',
     );
 
     arCoreController.onNodeTap = (nodeName) {
-      arCoreController.applyNurieTexture(nodeName, 'nurie');
+      arCoreController.applyNurieTexture(nodeName, 'nurie2');
     };
     arCoreController.onNurieMarkerModeChanged = (b) {
       print('onNurieMarkerModeChanged $b');
@@ -142,7 +142,7 @@ class _HelloWorldState extends State<HelloWorld> {
 
   int id = 0;
   void _handleOnPlaneTap(List<ArCoreHitTestResult> hits) {
-    final dir = '/storage/emulated/0/DCIM/model';
+    final dir = '/storage/emulated/0/DCIM/model2';
     final hit = hits.first;
     String model;
     if (id % 2 == 0) {

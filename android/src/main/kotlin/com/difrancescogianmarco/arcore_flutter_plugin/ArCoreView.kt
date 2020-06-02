@@ -44,7 +44,6 @@ import com.google.ar.sceneform.ux.AugmentedFaceNode
 import com.google.ar.sceneform.ux.FootprintSelectionVisualizer
 import com.google.ar.sceneform.ux.TransformableNode
 import com.google.ar.sceneform.ux.TransformationSystem
-import io.flutter.app.FlutterApplication
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -60,7 +59,7 @@ import kotlin.math.min
 class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: Int,
                  private val arType: ARType, args: Any?) : PlatformView, MethodChannel.MethodCallHandler {
     private val methodChannel: MethodChannel = MethodChannel(messenger, "arcore_flutter_plugin_$id")
-    private val activity: Activity = (context.applicationContext as FlutterApplication).currentActivity
+    private var activity = ArcoreFlutterPlugin.instance.context
     private val mainHandler = Handler()
     lateinit var activityLifecycleCallbacks: Application.ActivityLifecycleCallbacks
     private var mUserRequestedInstall = true
@@ -480,7 +479,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
             }
         }
 
-        (context.applicationContext as FlutterApplication).currentActivity.application
+        activity.application
                 .registerActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
     }
 
@@ -1021,7 +1020,7 @@ class ArCoreView(private val context: Context, messenger: BinaryMessenger, id: I
     }
 
     fun onDestroy() {
-        (context.applicationContext as FlutterApplication).currentActivity.application
+        activity.application
                 .unregisterActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
         VideoNode.dispose()
 

@@ -1,13 +1,12 @@
 package com.difrancescogianmarco.arcore_flutter_plugin
 
 import android.app.Activity
+import android.os.Handler
 import com.google.ar.core.ArCoreApk
 import io.flutter.embedding.engine.plugins.FlutterPlugin
-import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.PluginRegistry
-import android.os.Handler
 
 class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     private var channel: MethodChannel? = null
@@ -15,30 +14,36 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
 
     companion object {
 
+        const val PLATFORM_VIEW = "arcore_flutter_plugin"
         const val PREPARE = "arcore_prepare_plugin"
+        lateinit var instance: ArcoreFlutterPlugin
 
-        val TAG = "ArCoreFlutterPlugin"
         @JvmStatic
         fun registerWith(registrar: PluginRegistry.Registrar) {
             registrar
                     .platformViewRegistry()
-                    .registerViewFactory("arcore_flutter_plugin", ArCoreViewFactory(registrar.messenger()))
+                    .registerViewFactory(PLATFORM_VIEW, ArCoreViewFactory(registrar.messenger()))
 
-            val instance = ArcoreFlutterPlugin(registrar.messenger())
-            instance.context = registrar.activity()
+            ArcoreFlutterPlugin().also { instance ->
+                instance.channel = MethodChannel(registrar.messenger(), PREPARE).apply {
+                    instance.context = registrar.activity()
+                    setMethodCallHandler(instance)
+                }
+            }
         }
     }
 
-    private constructor(messenger: BinaryMessenger) {
-        channel = MethodChannel(messenger, PREPARE).apply {
-            setMethodCallHandler(this@ArcoreFlutterPlugin)
-        }
+    init {
+        instance = this
     }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        channel = MethodChannel(binding.flutterEngine.dartExecutor, PREPARE).apply {
+        val messenger = binding.flutterEngine.dartExecutor
+        channel = MethodChannel(messenger, PREPARE).apply {
             setMethodCallHandler(this@ArcoreFlutterPlugin)
         }
+
+        binding.flutterEngine.platformViewsController.registry.registerViewFactory(PLATFORM_VIEW, ArCoreViewFactory(messenger))
     }
 
     override fun onDetachedFromEngine(p0: FlutterPlugin.FlutterPluginBinding) {
