@@ -14,29 +14,36 @@ class ArcoreFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
 
     companion object {
 
+        const val PLATFORM_VIEW = "arcore_flutter_plugin"
         const val PREPARE = "arcore_prepare_plugin"
-
-        val TAG = "ArCoreFlutterPlugin"
+        lateinit var instance: ArcoreFlutterPlugin
 
         @JvmStatic
         fun registerWith(registrar: PluginRegistry.Registrar) {
             registrar
                     .platformViewRegistry()
-                    .registerViewFactory("arcore_flutter_plugin", ArCoreViewFactory(registrar.messenger()))
+                    .registerViewFactory(PLATFORM_VIEW, ArCoreViewFactory(registrar.messenger()))
 
             ArcoreFlutterPlugin().also { instance ->
                 instance.channel = MethodChannel(registrar.messenger(), PREPARE).apply {
-                    setMethodCallHandler(instance)
                     instance.context = registrar.activity()
+                    setMethodCallHandler(instance)
                 }
             }
         }
     }
 
+    init {
+        instance = this
+    }
+
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        channel = MethodChannel(binding.flutterEngine.dartExecutor, PREPARE).apply {
+        val messenger = binding.flutterEngine.dartExecutor
+        channel = MethodChannel(messenger, PREPARE).apply {
             setMethodCallHandler(this@ArcoreFlutterPlugin)
         }
+
+        binding.flutterEngine.platformViewsController.registry.registerViewFactory(PLATFORM_VIEW, ArCoreViewFactory(messenger))
     }
 
     override fun onDetachedFromEngine(p0: FlutterPlugin.FlutterPluginBinding) {

@@ -67,7 +67,7 @@ class ArCoreController {
   }
 
   Future<dynamic> _handleMethodCalls(MethodCall call) async {
-    print('_platformCallHandler call ${call.method} ${call.arguments}');
+//    print('_platformCallHandler call ${call.method} ${call.arguments}');
     switch (call.method) {
       case 'onError':
         if (onError != null) {
